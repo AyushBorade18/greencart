@@ -1,0 +1,12 @@
+{% extends "store_base.html" %}
+{% block title %}Email confirmed - GreenCart{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-box" style="text-align:center;">
+        <h1>Email confirmed</h1>
+        <p class="muted">Thank you! Your email address is verified. You can log in now.</p>
+        <a class="btn btn-wide" href="{{ url_for('login') }}">Customer login</a>
+        <p style="margin-top:12px;"><a class="btn btn-light btn-wide" href="{{ url_for('seller_login') }}">Seller login</a></p>
+    </div>
+</div>
+{% endblock %}

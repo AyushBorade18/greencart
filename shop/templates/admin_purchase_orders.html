@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "macros.html" import po_badge %}
+{% block title %}Restock orders - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Restock orders</h2>
+<div class="filters">
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_sellers') }}">Sellers</a>
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_seller_items') }}">Seller items</a>
+    <a class="btn btn-small" href="{{ url_for('admin_purchase_orders') }}">Restock orders</a>
+</div>
+<div class="filters">
+    <a class="btn btn-small {% if selected %}btn-outline{% endif %}" href="{{ url_for('admin_purchase_orders') }}">All</a>
+    {% for s in statuses %}
+        <a class="btn btn-small {% if selected != s %}btn-outline{% endif %}" href="{{ url_for('admin_purchase_orders', status=s) }}">{{ s }}</a>
+    {% endfor %}
+</div>
+
+<table>
+    <tr><th>Order</th><th>Product</th><th>Seller</th><th>Quantity</th><th>Price each</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
+    {% for o in orders %}
+    <tr>
+        <td><a href="{{ url_for('admin_po_detail', po_id=o.po_id) }}">#{{ o.po_id }}</a></td>
+        <td>{{ o.product_name }}<br><span class="muted small">{{ o.stock_now }} in stock now</span></td>
+        <td>{{ o.seller_name or '(open to all sellers)' }}</td>
+        <td>{{ o.quantity_offered or o.quantity_requested }}</td>
+        <td>{% if o.unit_price %}&#8377; {{ o.unit_price }}{% else %}-{% endif %}</td>
+        <td>{% if o.total_cost %}&#8377; {{ o.total_cost }}{% else %}-{% endif %}</td>
+        <td>{{ po_badge(o.status) }}</td>
+        <td>{{ o.created_at.strftime('%d %b %Y') }}</td>
+        <td><a class="btn btn-small btn-outline" href="{{ url_for('admin_po_detail', po_id=o.po_id) }}">Open</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="9" class="empty">No restock orders yet. Start one from the Inventory page.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import product_art %}
+{% block title %}Your cart - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Your cart</h1>
+
+    {% if items %}
+    <div class="cart-layout">
+        <div class="cart-lines">
+            {% for i in items %}
+            <div class="cart-line">
+                <a class="cart-thumb" href="{{ url_for('product_page', product_id=i.product_id) }}">{{ product_art(i) }}</a>
+                <div class="cart-info">
+                    <a class="cart-name" href="{{ url_for('product_page', product_id=i.product_id) }}">{{ i.product_name }}</a>
+                    <span class="muted">&#8377;{{ '{:,.2f}'.format(i.price) }} each</span>
+                    {% if i.quantity > i.quantity_available %}
+                        <span class="warn">Only {{ i.quantity_available }} available. Please reduce the quantity.</span>
+                    {% else %}
+                        <span class="muted">{{ i.quantity_available }} in stock</span>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('cart_remove') }}">
+                        <input type="hidden" name="cart_item_id" value="{{ i.cart_item_id }}">
+                        <button class="link-btn" type="submit">Remove</button>
+                    </form>
+                </div>
+                <form class="cart-qty" data-autosubmit method="POST" action="{{ url_for('cart_update') }}">
+                    <input type="hidden" name="cart_item_id" value="{{ i.cart_item_id }}">
+                    <div class="stepper">
+                        <button type="button" data-step="-1" aria-label="Less">&minus;</button>
+                        <input type="number" name="quantity" value="{{ i.quantity }}" min="1" max="{{ i.quantity_available if i.quantity_available > 0 else i.quantity }}">
+                        <button type="button" data-step="1" aria-label="More">+</button>
+                    </div>
+                    <button class="link-btn" type="submit">Update</button>
+                </form>
+                <div class="cart-total">&#8377;{{ '{:,.2f}'.format(i.line_total) }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <aside class="summary">
+            <h3>Order summary</h3>
+            <div class="sum-row"><span>Subtotal</span><span>&#8377;{{ '{:,.2f}'.format(s.subtotal) }}</span></div>
+            {% if s.discount > 0 %}
+            <div class="sum-row sum-saving"><span>Coupon {{ s.coupon }}</span><span>&minus; &#8377;{{ '{:,.2f}'.format(s.discount) }}</span></div>
+            {% endif %}
+            <div class="sum-row"><span>Delivery</span><span>{% if s.fee == 0 %}Free{% else %}&#8377;{{ '{:,.2f}'.format(s.fee) }}{% endif %}</span></div>
+            {% if s.free_left > 0 %}<p class="muted small">Add &#8377;{{ '{:,.0f}'.format(s.free_left) }} more to get free delivery.</p>{% endif %}
+            <div class="sum-row sum-total"><span>Total</span><span>&#8377;{{ '{:,.2f}'.format(s.total) }}</span></div>
+
+            <div class="coupon-box">
+                {% if s.coupon %}
+                <form method="POST" action="{{ url_for('cart_coupon_remove') }}">
+                    <span class="pill pill-dark">{{ s.coupon }} applied</span>
+                    <button class="link-btn" type="submit">Remove</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('cart_coupon') }}" class="coupon-form">
+                    <input type="text" name="code" placeholder="Coupon code" maxlength="30" autocapitalize="characters" autocomplete="off">
+                    <button class="btn btn-light" type="submit">Apply</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <form method="POST" action="{{ url_for('checkout') }}">
+                {% if addresses %}
+                <label>Deliver to
+                    <select name="address_id">
+                        {% for a in addresses %}
+                        <option value="{{ a.address_id }}" {% if a.is_default %}selected{% endif %}>{{ a.label }}: {{ a.line1 }}, {{ a.city }} {{ a.pincode }}</option>
+                        {% endfor %}
+                        <option value="">My profile address: {{ default_address }}</option>
+                    </select>
+                </label>
+                <p class="muted small"><a href="{{ url_for('addresses') }}">Manage addresses</a></p>
+                {% else %}
+                <label>Delivery address
+                    <input type="text" name="shipping_address" value="{{ default_address }}" required>
+                </label>
+                <p class="muted small"><a href="{{ url_for('addresses') }}">Save addresses</a> for faster checkout.</p>
+                {% endif %}
+                <p class="muted small">Estimated delivery by <strong>{{ eta.strftime('%a, %d %b') }}</strong></p>
+                <label>Payment method
+                    <select name="payment_method" required>
+                        {% for m in methods %}<option value="{{ m }}">{{ m }}</option>{% endfor %}
+                    </select>
+                </label>
+                <p class="muted small">Payment is simulated for this project. Online methods are recorded as paid; cash on delivery stays pending until delivery.</p>
+                {% if has_problem %}<p class="warn small">Please reduce the quantities marked above before ordering.</p>{% endif %}
+                <button class="btn btn-wide" type="submit" {% if has_problem %}disabled{% endif %}>Place order</button>
+            </form>
+        </aside>
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Your cart is empty.</p>
+        <a class="btn" href="{{ url_for('shop') }}">Continue shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

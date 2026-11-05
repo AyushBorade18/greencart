@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Returns - GreenCart{% endblock %}
+{% block content %}
+<h2 class="page-title">Returns &amp; refunds</h2>
+<p class="muted">Requested &rarr; Approved &rarr; Refunded (or Rejected). Refunding puts the item back into stock unless you tick &ldquo;do not restock&rdquo;.</p>
+
+<form class="inline-form" method="GET">
+    <select name="status" onchange="this.form.submit()">
+        <option value="">All returns</option>
+        {% for s in statuses %}<option value="{{ s }}" {% if selected == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
+    </select>
+</form>
+
+<table>
+    <tr><th>#</th><th>Customer</th><th>Item</th><th>Reason</th><th>Refund</th><th>Status</th><th>Action</th></tr>
+    {% for r in returns %}
+    <tr>
+        <td>{{ r.return_id }}<br><span class="muted">{{ r.created_at.strftime('%d %b') }}</span></td>
+        <td>{{ r.customer_name }}<br><span class="muted">order <a href="{{ url_for('admin_order_detail', order_id=r.order_id) }}">#{{ r.order_id }}</a></span></td>
+        <td>{{ r.product_name }} &times; {{ r.quantity }}</td>
+        <td>{{ r.reason }}{% if r.details %}<br><span class="muted">{{ r.details }}</span>{% endif %}</td>
+        <td>&#8377;{{ '{:,.2f}'.format(r.refund_amount) }}</td>
+        <td>{% if r.status == 'Refunded' %}<span class="badge badge-green">Refunded</span>
+            {% elif r.status == 'Rejected' %}<span class="badge badge-red">Rejected</span>
+            {% else %}<span class="badge badge-amber">{{ r.status }}</span>{% endif %}
+            {% if r.admin_note %}<br><span class="muted">{{ r.admin_note }}</span>{% endif %}</td>
+        <td>
+            {% if r.status in ['Requested', 'Approved'] %}
+            <form method="POST" action="{{ url_for('admin_return_action', return_id=r.return_id) }}" class="inline-form">
+                <input type="hidden" name="back_status" value="{{ selected }}">
+                <input type="text" name="note" placeholder="Note to customer (optional)" maxlength="300">
+                {% if r.status == 'Approved' %}
+                <label class="muted"><input type="checkbox" name="no_restock" value="1" style="width:auto;"> do not restock</label>
+                {% endif %}
+                {% if r.status == 'Requested' %}<button class="btn btn-small" name="action" value="approve" type="submit">Approve</button>{% endif %}
+                {% if r.status == 'Approved' %}<button class="btn btn-small" name="action" value="refund" type="submit" onclick="return confirm('Mark as refunded?');">Refund</button>{% endif %}
+                <button class="btn btn-small btn-red" name="action" value="reject" type="submit">Reject</button>
+            </form>
+            {% else %}<span class="muted">Closed</span>{% endif %}
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="muted">No return requests.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

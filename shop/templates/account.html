@@ -1,0 +1,28 @@
+{% extends "store_base.html" %}
+{% block title %}My account - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My account</h1>
+    {% include "_account_nav.html" %}
+    <p class="muted">Signed in as <strong>{{ c.email }}</strong></p>
+
+    <div class="kpis">
+        <a class="kpi" href="{{ url_for('orders') }}"><strong>{{ stats.orders or 0 }}</strong><span>Orders</span></a>
+        <a class="kpi" href="{{ url_for('wishlist') }}"><strong>{{ stats.wishlist or 0 }}</strong><span>Wishlist</span></a>
+        <a class="kpi" href="{{ url_for('returns') }}"><strong>{{ stats.returns or 0 }}</strong><span>Returns</span></a>
+    </div>
+
+    <form class="form-box" method="POST">
+        <h3>Your details</h3>
+        <div class="grid-form">
+            <label>Full name<input type="text" name="full_name" maxlength="100" value="{{ c.full_name }}" required></label>
+            <label>Phone (10 digits)<input type="text" name="phone" maxlength="10" inputmode="numeric" value="{{ c.phone }}" required></label>
+            <label class="full">Main address<input type="text" name="address" maxlength="255" value="{{ c.address }}" required></label>
+            <label>City<input type="text" name="city" maxlength="50" value="{{ c.city }}" required></label>
+            <label>Pincode (6 digits)<input type="text" name="pincode" maxlength="6" inputmode="numeric" value="{{ c.pincode }}" required></label>
+            <button class="btn btn-wide full" type="submit">Save details</button>
+        </div>
+        <p class="muted small">Need more than one delivery address? Use <a href="{{ url_for('addresses') }}">Addresses</a>. Your email and password are managed by the sign-in service.</p>
+    </form>
+</div>
+{% endblock %}

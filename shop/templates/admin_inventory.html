@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "macros.html" import po_badge %}
+{% block title %}Inventory - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Inventory</h2>
+
+<p class="panel" style="margin-top:0;">
+    Stock can no longer be added by hand. To restock a product, click <strong>Restock</strong>: the page checks what the sellers have,
+    then you order from a seller or send a request to all sellers. Stock goes up when you <strong>receive</strong> the seller's shipment.
+</p>
+
+<table>
+    <tr><th>Product</th><th>Category</th><th>In stock</th><th>Reorder level</th><th>Status</th><th>Seller supply</th><th>Restock order</th><th></th></tr>
+    {% for s in stock %}
+    <tr>
+        <td>{{ s.product_name }}</td>
+        <td>{{ s.category_name }}</td>
+        <td><strong>{{ s.quantity_available }}</strong></td>
+        <td>{{ s.reorder_level }}</td>
+        <td>
+            {% if s.stock_status == 'In Stock' %}<span class="badge badge-green">In Stock</span>
+            {% elif s.stock_status == 'Low Stock' %}<span class="badge badge-orange">Low Stock</span>
+            {% else %}<span class="badge badge-red">Out of Stock</span>{% endif %}
+        </td>
+        <td>
+            {% if s.seller_offers %}{{ s.seller_supply }} units &middot; {{ s.seller_offers }} seller{{ '' if s.seller_offers == 1 else 's' }}<br>
+                <span class="muted small">from &#8377;{{ s.best_price }} each</span>
+            {% else %}<span class="muted">No seller stock</span>{% endif %}
+        </td>
+        <td>
+            {% if s.active_po_id %}<a href="{{ url_for('admin_po_detail', po_id=s.active_po_id) }}">#{{ s.active_po_id }}</a> {{ po_badge(s.active_po_status) }}
+            {% else %}<span class="muted">-</span>{% endif %}
+        </td>
+        <td>
+            <a class="btn btn-small {% if s.stock_status == 'In Stock' %}btn-outline{% endif %}" href="{{ url_for('admin_restock_page', product_id=s.product_id) }}">Restock</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h3 class="section-title">Recent low-stock alerts <span class="muted small">(written automatically by a trigger)</span></h3>
+{% if alerts %}
+<table>
+    <tr><th>Time</th><th>Product</th><th>Items left</th></tr>
+    {% for a in alerts %}
+    <tr><td>{{ a.alert_time.strftime('%d %b %Y, %I:%M %p') }}</td><td>{{ a.product_name }}</td><td>{{ a.quantity_left }}</td></tr>
+    {% endfor %}
+</table>
+{% else %}
+    <div class="empty">No alerts yet.</div>
+{% endif %}
+{% endblock %}

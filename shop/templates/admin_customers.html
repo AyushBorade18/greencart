@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Customers - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Customers</h2>
+<table>
+    <tr><th>Name</th><th>Email</th><th>Phone</th><th>City</th><th>Joined</th><th>Orders</th><th>Total spent</th><th>Tier</th></tr>
+    {% for c in customers %}
+    <tr>
+        <td>{{ c.full_name }}</td>
+        <td>{{ c.email }}</td>
+        <td>{{ c.phone }}</td>
+        <td>{{ c.city }}</td>
+        <td>{{ c.created_at.strftime('%d %b %Y') }}</td>
+        <td>{{ c.orders_count }}</td>
+        <td>&#8377; {{ c.total_spent }}</td>
+        <td>
+            {% if c.tier == 'Gold' %}<span class="badge badge-orange">Gold</span>
+            {% elif c.tier == 'Silver' %}<span class="badge badge-grey">Silver</span>
+            {% else %}<span class="badge badge-green">Bronze</span>{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<p class="muted small" style="margin-top:12px;">Tier is calculated by an SQL function: Gold from &#8377;10,000, Silver from &#8377;5,000. Cancelled orders are not counted.</p>
+{% endblock %}

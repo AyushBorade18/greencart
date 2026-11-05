@@ -1,0 +1,66 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import product_art, po_pill %}
+{% block title %}Requests - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Requests from the store</h1>
+
+    {% if g.seller.status != 'Approved' %}
+        <p class="notice warn">Your account is not approved yet, so you cannot answer requests.</p>
+    {% endif %}
+
+    <h2 class="section-title">Orders waiting for your answer</h2>
+    {% for r in new_orders %}
+    <div class="req">
+        <div class="mini">{{ product_art({'category_name': r.category_name, 'image_url': r.product_image, 'product_name': r.product_name}) }}</div>
+        <div>
+            <strong>Order #{{ r.po_id }} &middot; {{ r.product_name }}</strong><br>
+            <span class="muted">{{ r.quantity_offered }} items at &#8377;{{ '{:,.2f}'.format(r.unit_price) }} = <strong>&#8377;{{ '{:,.2f}'.format(r.total_cost) }}</strong></span>
+            {% if r.admin_note %}<br><span class="muted small">Note from the store: {{ r.admin_note }}</span>{% endif %}
+        </div>
+        <form class="row-form" method="POST" action="{{ url_for('seller_order_action', po_id=r.po_id) }}">
+            <input type="hidden" name="next" value="{{ url_for('seller_requests') }}">
+            <input type="text" name="note" placeholder="Note (optional)" style="width:150px;">
+            <button class="btn btn-small" name="action" value="accept" type="submit">Accept</button>
+            <button class="btn btn-light btn-small" name="action" value="decline" type="submit">Decline</button>
+        </form>
+    </div>
+    {% else %}
+        <p class="muted">No new orders right now.</p>
+    {% endfor %}
+
+    <h2 class="section-title">Open requests: the store needs these and has no supplier yet</h2>
+    {% for r in open_requests %}
+    <div class="req">
+        <div class="mini">{{ product_art({'category_name': r.category_name, 'image_url': r.product_image, 'product_name': r.product_name}) }}</div>
+        <div>
+            <strong>Request #{{ r.po_id }} &middot; {{ r.product_name }}</strong><br>
+            <span class="muted">Needs {{ r.quantity_requested }} items{% if r.max_unit_price %} &middot; will pay up to &#8377;{{ '{:,.2f}'.format(r.max_unit_price) }} each{% endif %}</span>
+            {% if r.admin_note %}<br><span class="muted small">Note from the store: {{ r.admin_note }}</span>{% endif %}
+        </div>
+        <form class="row-form" method="POST" action="{{ url_for('seller_offer', po_id=r.po_id) }}">
+            <label>Qty<input type="number" name="quantity" min="1" max="{{ r.quantity_requested }}" value="{{ r.quantity_requested }}" required></label>
+            <label>Price each<input type="number" name="unit_price" step="0.01" min="0.01" {% if r.max_unit_price %}max="{{ r.max_unit_price }}"{% endif %} required></label>
+            <input type="text" name="note" placeholder="Note (optional)" style="width:140px;">
+            <button class="btn btn-small" type="submit" {% if g.seller.status != 'Approved' %}disabled{% endif %}>Send offer</button>
+        </form>
+    </div>
+    {% else %}
+        <p class="muted">There are no open requests. When a product runs out and no seller has it, the request appears here.</p>
+    {% endfor %}
+
+    {% if my_offers %}
+    <h2 class="section-title">Your offers waiting for the admin</h2>
+    {% for r in my_offers %}
+    <div class="req">
+        <div class="mini">{{ product_art({'category_name': r.category_name, 'image_url': r.product_image, 'product_name': r.product_name}) }}</div>
+        <div>
+            <strong>Request #{{ r.po_id }} &middot; {{ r.product_name }}</strong><br>
+            <span class="muted">You offered {{ r.quantity_offered }} at &#8377;{{ '{:,.2f}'.format(r.unit_price) }} each</span>
+        </div>
+        <div>{{ po_pill(r.status) }}</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

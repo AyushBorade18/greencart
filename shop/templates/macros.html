@@ -1,0 +1,32 @@
+{# Small reusable pieces used by several pages #}
+
+{% macro status_badge(status) %}
+    {% if status == 'Delivered' %}<span class="badge badge-green">Delivered</span>
+    {% elif status == 'Cancelled' %}<span class="badge badge-red">Cancelled</span>
+    {% elif status == 'Shipped' %}<span class="badge badge-orange">Shipped</span>
+    {% else %}<span class="badge badge-grey">{{ status }}</span>{% endif %}
+{% endmacro %}
+
+{% macro stock_badge(p) %}
+    {% if p.stock_status == 'In Stock' %}
+        <span class="badge badge-green">{{ p.quantity_available }} in stock</span>
+    {% elif p.stock_status == 'Low Stock' %}
+        <span class="badge badge-orange">Only {{ p.quantity_available }} left</span>
+    {% else %}
+        <span class="badge badge-red">Out of Stock</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro icon(category_name) %}
+    {%- set icons = {'Electronics': '&#127911;', 'Fashion': '&#128085;', 'Home & Kitchen': '&#127859;',
+                     'Books': '&#128218;', 'Sports & Fitness': '&#127947;'} -%}
+    {{ icons.get(category_name, '&#128230;')|safe }}
+{% endmacro %}
+
+{# Status label for a purchase order (admin pages) #}
+{% macro po_badge(status) %}
+    {% if status in ['Received', 'Accepted'] %}<span class="badge badge-green">{{ status }}</span>
+    {% elif status in ['Declined', 'Cancelled'] %}<span class="badge badge-red">{{ status }}</span>
+    {% elif status in ['Offered', 'Shipped'] %}<span class="badge badge-orange">{{ status }}</span>
+    {% else %}<span class="badge badge-grey">{{ status }}</span>{% endif %}
+{% endmacro %}

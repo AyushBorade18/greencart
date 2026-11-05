@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "macros.html" import po_badge %}
+{% block title %}Restock {{ p.product_name }} - GreenCart Admin{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin_inventory') }}">&larr; Back to inventory</a></p>
+<h2 class="page-title">Restock: {{ p.product_name }}</h2>
+
+<div class="stats">
+    <div class="stat"><div class="number">{{ p.quantity_available }}</div><div class="label">In stock now</div></div>
+    <div class="stat"><div class="number">{{ p.reorder_level }}</div><div class="label">Reorder level</div></div>
+    <div class="stat"><div class="number">{{ p.seller_supply }}</div><div class="label">Units sellers can supply</div></div>
+    <div class="stat"><div class="number">{{ p.seller_offers }}</div><div class="label">Seller listings with stock</div></div>
+</div>
+
+{% if active %}
+<div class="panel">
+    <h4>A restock order is already in progress</h4>
+    <p>Order <a href="{{ url_for('admin_po_detail', po_id=active.po_id) }}">#{{ active.po_id }}</a> {{ po_badge(active.status) }}
+       &middot; {{ active.quantity_offered or active.quantity_requested }} items{% if active.seller_name %} from {{ active.seller_name }}{% endif %}.
+       Finish or cancel it before ordering again.</p>
+    <a class="btn btn-small" href="{{ url_for('admin_po_detail', po_id=active.po_id) }}">Open the order</a>
+</div>
+{% else %}
+
+    <h3 class="section-title">Step 1 &middot; Check what the sellers have</h3>
+    {% if available %}
+    <table>
+        <tr><th>Seller</th><th>Item</th><th>Price each</th><th>Available</th><th>Min order</th><th>Order from this seller</th></tr>
+        {% for l in available %}
+        <tr>
+            <td><strong>{{ l.business_name }}</strong></td>
+            <td>{{ l.item_name }}</td>
+            <td>&#8377; {{ l.unit_price }}</td>
+            <td>{{ l.quantity_available }}</td>
+            <td>{{ l.min_order_qty }}</td>
+            <td>
+                <form class="inline-form" method="POST" action="{{ url_for('admin_restock_order') }}">
+                    <input type="hidden" name="listing_id" value="{{ l.listing_id }}">
+                    <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                    <input class="qty-input" type="number" name="quantity" min="{{ l.min_order_qty }}" max="{{ l.quantity_available }}" value="{{ l.min_order_qty }}" required>
+                    <input type="text" name="note" placeholder="Note (optional)" style="width:140px;">
+                    <button class="btn btn-small" type="submit">Place order</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <p class="muted small" style="margin-top:10px;">The order goes to the seller, who accepts and ships it. When it arrives, you mark it received and the stock goes up.</p>
+    {% else %}
+    <div class="panel">
+        <p><strong>No seller currently has this product in stock.</strong></p>
+        {% for l in unavailable %}
+            <p class="muted small">&bull; {{ l.business_name }} lists it, but it is not available
+                ({% if not l.is_active %}hidden{% elif l.seller_status != 'Approved' %}seller {{ l.seller_status|lower }}{% else %}only {{ l.quantity_available }} left, minimum order {{ l.min_order_qty }}{% endif %}).</p>
+        {% endfor %}
+    </div>
+
+    <h3 class="section-title">Step 2 &middot; Send a restock request to all sellers</h3>
+    <div class="panel">
+        <form method="POST" action="{{ url_for('admin_restock_request') }}">
+            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+            <label for="quantity">How many items do you need?</label>
+            <input type="number" id="quantity" name="quantity" min="1" value="20" required>
+            <label for="max_price">Highest price you will pay per item (&#8377;, optional)</label>
+            <input type="number" id="max_price" name="max_price" step="0.01" min="0.01">
+            <label for="note">Note for the sellers (optional)</label>
+            <input type="text" id="note" name="note" maxlength="300">
+            <button class="btn" type="submit" style="margin-top:14px;">Send request to sellers</button>
+        </form>
+        <p class="muted small">Sellers see the request in their portal and send an offer (price and quantity). You then accept or reject the offer.</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% if history %}
+<h3 class="section-title">Recent restock orders for this product</h3>
+<table>
+    <tr><th>Order</th><th>Seller</th><th>Quantity</th><th>Total</th><th>Status</th><th>Date</th></tr>
+    {% for h in history %}
+    <tr>
+        <td><a href="{{ url_for('admin_po_detail', po_id=h.po_id) }}">#{{ h.po_id }}</a></td>
+        <td>{{ h.seller_name or '(open request)' }}</td>
+        <td>{{ h.quantity_offered or h.quantity_requested }}</td>
+        <td>{% if h.total_cost %}&#8377; {{ h.total_cost }}{% else %}-{% endif %}</td>
+        <td>{{ po_badge(h.status) }}</td>
+        <td>{{ h.created_at.strftime('%d %b %Y') }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

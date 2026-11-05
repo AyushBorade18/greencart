@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>GreenCart - Everything you love, one cart away</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="/assets/landing.css">
+    {% include "_pwa.html" %}
+</head>
+<body>
+
+<div class="progress"><div id="progress"></div></div>
+
+<header class="top">
+    <a class="brand" href="#top">GreenCart</a>
+    <nav>
+        <a href="#how">How it works</a>
+        <a href="#login">Log in</a>
+        <a class="faint" href="{{ url_for('seller_login') }}">Sell with us</a>
+        <a class="faint" href="{{ url_for('admin_login') }}">Admin</a>
+    </nav>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toasts">
+        {% for category, message in messages %}<div class="toast {{ category }}">{{ message }}</div>{% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+<!-- The shopping cart. The script moves it while you scroll. -->
+<div class="cart" id="cart" aria-hidden="true">
+    <div class="cart-inner">
+        <div class="drops">
+            <div class="drop d1"><svg viewBox="0 0 96 96"><path d="M32 18 16 28l8 14 8-4v40h32V38l8 4 8-14-16-10c-4 6-28 6-32 0Z"/></svg></div>
+            <div class="drop d2"><svg viewBox="0 0 96 96"><path d="M20 58V48a28 28 0 0 1 56 0v10"/><rect x="14" y="54" width="14" height="24" rx="6"/><rect x="68" y="54" width="14" height="24" rx="6"/></svg></div>
+            <div class="drop d3"><svg viewBox="0 0 96 96"><path d="M22 20h44a8 8 0 0 1 8 8v48H30a8 8 0 0 1-8-8Z"/><path d="M22 68a8 8 0 0 1 8-8h44"/><path d="M36 32h24"/></svg></div>
+        </div>
+        <svg class="cart-svg" viewBox="0 0 460 360">
+            <path d="M26 46 H80 L124 240 H398" class="stroke" fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M98 100 H432 L398 208 H130 Z" fill="#ffffff" class="stroke" stroke-width="16" stroke-linejoin="round"/>
+            <path d="M178 106 L186 204 M264 106 L266 204 M350 106 L346 204 M112 154 H418" class="stroke" fill="none" stroke-width="9" stroke-linecap="round"/>
+            <g class="wheel">
+                <circle cx="176" cy="302" r="31" class="wheel-fill stroke" stroke-width="14"/>
+                <circle cx="176" cy="302" r="8" class="ink"/>
+                <path d="M176 280 V324 M154 302 H198" class="stroke" stroke-width="5" stroke-linecap="round"/>
+            </g>
+            <g class="wheel">
+                <circle cx="352" cy="302" r="31" class="wheel-fill stroke" stroke-width="14"/>
+                <circle cx="352" cy="302" r="8" class="ink"/>
+                <path d="M352 280 V324 M330 302 H374" class="stroke" stroke-width="5" stroke-linecap="round"/>
+            </g>
+        </svg>
+    </div>
+</div>
+
+<main id="top">
+
+    <!-- 1. Hero -->
+    <section class="scene left">
+        <div class="copy">
+            <p class="eyebrow reveal">Online store</p>
+            <h1 class="reveal" style="--d:.1s">Everything<br>you love,<br>one cart away.</h1>
+            <p class="lead reveal" style="--d:.2s">Browse, add to cart and check out in a few clicks, then follow your order until it reaches your door.</p>
+            <div class="actions reveal" style="--d:.3s">
+                <a class="btn" href="#login">Start shopping</a>
+                <a class="btn ghost" href="#how">See how it works</a>
+            </div>
+        </div>
+        <div class="scroll-hint">Scroll<span></span></div>
+    </section>
+
+    <!-- 2. Browse -->
+    <section class="scene right" id="how">
+        <div class="copy">
+            <p class="eyebrow reveal">01 &middot; Browse</p>
+            <h2 class="reveal" style="--d:.1s">Find it in seconds.</h2>
+            <p class="lead reveal" style="--d:.2s">Search the whole store, filter by category, price and availability, and sort by what sells best or what is rated highest. Live stock counts show what is ready to ship.</p>
+            <div class="tags reveal" style="--d:.3s"><span>Electronics</span><span>Fashion</span><span>Home &amp; Kitchen</span><span>Books</span><span>Sports &amp; Fitness</span></div>
+        </div>
+    </section>
+
+    <!-- 3. Add to cart -->
+    <section class="scene left">
+        <div class="copy">
+            <p class="eyebrow reveal">02 &middot; Add to cart</p>
+            <h2 class="reveal" style="--d:.1s">Fill it up.</h2>
+            <p class="lead reveal" style="--d:.2s">Change quantities, remove items, and see your total update instantly. Stock is checked for you, so you never order something that is sold out.</p>
+        </div>
+    </section>
+
+    <!-- 4. Pay -->
+    <section class="scene right">
+        <div class="copy">
+            <p class="eyebrow reveal">03 &middot; Pay</p>
+            <h2 class="reveal" style="--d:.1s">Pay your way.</h2>
+            <p class="lead reveal" style="--d:.2s">One checkout, five ways to pay. Your order, payment and stock update together, so everything stays correct even if something goes wrong.</p>
+            <div class="tags reveal" style="--d:.3s"><span>UPI</span><span>Credit card</span><span>Debit card</span><span>Net banking</span><span>Cash on delivery</span></div>
+        </div>
+    </section>
+
+    <!-- 5. Track -->
+    <section class="scene left">
+        <div class="copy">
+            <p class="eyebrow reveal">04 &middot; Track</p>
+            <h2 class="reveal" style="--d:.1s">Watch it arrive.</h2>
+            <p class="lead reveal" style="--d:.2s">Follow every order from confirmed to delivered, cancel before it ships, and rate your purchase once it is in your hands.</p>
+            <ol class="steps reveal" style="--d:.3s">
+                <li>Confirmed</li><li>Packed</li><li>Shipped</li><li>Delivered</li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- 6. Log in -->
+    <section class="scene right" id="login">
+        <div class="login-card reveal">
+            <h2>Ready to shop?</h2>
+            <p class="muted">Log in to your account.</p>
+            <form method="POST" action="{{ url_for('login') }}">
+                <label>Email<input type="email" name="email" required></label>
+                <label>Password<input type="password" name="password" required></label>
+                <button class="btn wide" type="submit">Log in</button>
+            </form>
+            <p class="small">New here? <a href="{{ url_for('register') }}">Create an account</a></p>
+            <p class="small faint"><a href="{{ url_for('seller_login') }}">Seller login</a> &nbsp;&middot;&nbsp; <a href="{{ url_for('admin_login') }}">Admin login</a></p>
+        </div>
+    </section>
+
+</main>
+
+<script src="/assets/landing.js"></script>
+</body>
+</html>

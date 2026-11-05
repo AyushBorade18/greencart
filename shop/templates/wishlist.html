@@ -1,0 +1,21 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import product_card %}
+{% block title %}My wishlist - GreenCart{% endblock %}
+{% block content %}
+{% set back = url_for('wishlist') %}
+<div class="container">
+    <h1 class="page-title">My wishlist</h1>
+    {% include "_account_nav.html" %}
+    {% if products %}
+    <p class="muted">{{ products|length }} saved item{{ '' if products|length == 1 else 's' }}. Tap the heart to remove one.</p>
+    <div class="product-grid">
+        {% for p in products %}{{ product_card(p, back, wish_ids) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>Your wishlist is empty. Tap the heart on any product to save it for later.</p>
+        <a class="btn" href="{{ url_for('shop') }}">Browse products</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

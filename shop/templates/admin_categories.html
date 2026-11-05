@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Categories - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Categories</h2>
+
+<div class="panel">
+    <h4>Add a category</h4>
+    <form class="inline-form" method="POST" action="{{ url_for('admin_category_add') }}">
+        <input type="text" name="category_name" placeholder="Category name" style="max-width:240px;" required>
+        <input type="text" name="description" placeholder="Short description" style="max-width:360px;">
+        <button class="btn" type="submit">Add</button>
+    </form>
+</div>
+
+<table>
+    <tr><th>Name</th><th>Description</th><th>Products</th><th>Actions</th></tr>
+    {% for c in categories %}
+    <tr>
+        <td colspan="2">
+            <form class="inline-form" method="POST" action="{{ url_for('admin_category_edit', category_id=c.category_id) }}">
+                <input type="text" name="category_name" value="{{ c.category_name }}" style="max-width:220px;" required>
+                <input type="text" name="description" value="{{ c.description or '' }}" style="max-width:340px;">
+                <button class="btn btn-small btn-outline" type="submit">Save</button>
+            </form>
+        </td>
+        <td>{{ c.product_count }}</td>
+        <td>
+            <form method="POST" action="{{ url_for('admin_category_delete', category_id=c.category_id) }}"
+                  onsubmit="return confirm('Delete this category?');">
+                <button class="btn btn-small btn-red" type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<p class="muted small" style="margin-top:12px;">A category that still has products cannot be deleted.</p>
+{% endblock %}

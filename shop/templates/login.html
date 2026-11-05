@@ -1,0 +1,28 @@
+{% extends "store_base.html" %}
+{% block title %}Log in - GreenCart{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-box">
+        <h1>Welcome back</h1>
+        <p class="muted">Log in to continue shopping.</p>
+        <form method="POST">
+            <label>Email<input type="email" name="email" value="{{ email }}" required autofocus></label>
+            <label>Password<input type="password" name="password" required></label>
+            <button class="btn btn-wide" type="submit">Log in</button>
+        </form>
+
+        {% if need_confirm %}
+        <form method="POST" action="{{ url_for('auth_resend') }}" class="resend">
+            <input type="hidden" name="email" value="{{ email }}">
+            <input type="hidden" name="role" value="customer">
+            <p class="muted small">Did not get the email? Check your spam folder, or</p>
+            <button class="btn btn-light btn-wide" type="submit">Send the confirmation email again</button>
+        </form>
+        {% endif %}
+
+        <p class="auth-switch">New here? <a href="{{ url_for('register') }}">Create an account</a></p>
+        <p class="auth-switch">Selling wholesale? <a href="{{ url_for('seller_login') }}">Seller login</a></p>
+        <p class="auth-switch"><a href="{{ url_for('home') }}">&larr; Back to home</a></p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Admin Dashboard - GreenCart{% endblock %}
+{% block content %}
+<h2 class="page-title">Admin Dashboard</h2>
+
+{% if not stats.categories or not stats.products or not stats.approved_sellers %}
+<div class="auth-card" style="max-width:none; margin:0 0 22px;">
+    <h3 style="margin-bottom:8px;">Getting started</h3>
+    <ol style="margin-left:20px; line-height:1.9;">
+        <li>{% if stats.categories %}&#10003;{% else %}&#9744;{% endif %} <a href="{{ url_for('admin_categories') }}">Add your categories</a> (Footwear, Electronics ...)</li>
+        <li>{% if stats.products %}&#10003;{% else %}&#9744;{% endif %} <a href="{{ url_for('admin_product_new') }}">Add your first product</a> with a picture, price and opening stock</li>
+        <li>{% if stats.approved_sellers %}&#10003;{% else %}&#9744;{% endif %} <a href="{{ url_for('admin_sellers') }}">Approve sellers</a> after they register at <code>/seller/register</code></li>
+        <li>&#9744; Customers register at <code>/register</code> and can start ordering</li>
+    </ol>
+</div>
+{% endif %}
+
+<div class="stats">
+    <div class="stat"><div class="number">{{ stats.orders }}</div><div class="label">Total orders</div></div>
+    <div class="stat"><div class="number">{{ stats.to_process }}</div><div class="label">Orders waiting to be shipped</div></div>
+    <div class="stat"><div class="number">&#8377; {{ stats.revenue }}</div><div class="label">Revenue (excluding cancelled)</div></div>
+    <div class="stat"><div class="number">{{ stats.customers }}</div><div class="label">Customers</div></div>
+    <div class="stat"><div class="number">{{ stats.low_stock }}</div><div class="label">Low-stock products</div></div>
+    <div class="stat"><div class="number">{{ stats.pending_sellers }}</div><div class="label">Sellers waiting for approval</div></div>
+    <div class="stat"><div class="number">{{ stats.offers }}</div><div class="label">Seller offers to review</div></div>
+    <div class="stat"><div class="number">{{ stats.to_receive }}</div><div class="label">Seller shipments to receive</div></div>
+    <div class="stat"><div class="number">{{ stats.new_items }}</div><div class="label">New seller items to add to the store</div></div>
+    <div class="stat"><div class="number">{{ stats.open_returns }}</div><div class="label"><a href="{{ url_for('admin_returns') }}">Returns waiting for action</a></div></div>
+</div>
+
+<div class="filters">
+    <a class="btn" href="{{ url_for('admin_product_new') }}">+ Add product</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_categories') }}">Categories</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_coupons') }}">Coupons</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_returns') }}">Returns</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_products') }}">Products</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_inventory') }}">Inventory</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_seller_items', link='new') }}">New seller items</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_sellers') }}">Manage sellers</a>
+    <a class="btn btn-outline" href="{{ url_for('admin_reports') }}">View reports</a>
+</div>
+
+<h3 style="margin-top:22px;">Recent orders <a class="btn btn-small" style="margin-left:12px;" href="{{ url_for('admin_orders') }}">Manage all orders</a></h3>
+{% if recent %}
+<table>
+    <tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Payment</th></tr>
+    {% for o in recent %}
+    <tr>
+        <td><a href="{{ url_for('admin_order_detail', order_id=o.order_id) }}">#{{ o.order_id }}</a></td>
+        <td>{{ o.customer_name }}</td>
+        <td>{{ o.order_date.strftime('%d %b %Y') }}</td>
+        <td>&#8377; {{ o.total_amount }}</td>
+        <td>{{ status_badge(o.order_status) }}</td>
+        <td>{{ o.payment_status }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+    <div class="empty">No orders yet.</div>
+{% endif %}
+{% endblock %}

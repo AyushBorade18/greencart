@@ -1,0 +1,56 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import product_art, po_pill %}
+{% block title %}Dashboard - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Welcome, {{ g.seller.business_name }}</h1>
+
+    {% if g.seller.status == 'Pending' %}
+        <p class="notice warn">Your account is waiting for approval from the store admin. You can look around, but you cannot list items or send offers until you are approved.</p>
+    {% elif g.seller.status == 'Suspended' %}
+        <p class="notice warn">Your account is suspended. Please contact the store admin.</p>
+    {% endif %}
+
+    <div class="kpis">
+        <div class="kpi"><b>{{ stats.listings }}</b><span>Active listings</span></div>
+        <div class="kpi"><b>{{ stats.units }}</b><span>Units you have listed</span></div>
+        <div class="kpi"><b>{{ stats.open_requests }}</b><span>Open requests from the store</span></div>
+        <div class="kpi"><b>{{ stats.new_orders }}</b><span>New orders to answer</span></div>
+        <div class="kpi"><b>{{ stats.to_ship }}</b><span>Orders to ship</span></div>
+        <div class="kpi"><b>&#8377;{{ '{:,.2f}'.format(stats.earned) }}</b><span>Earned (received orders)</span></div>
+    </div>
+
+    <div class="actions-row">
+        <a class="btn" href="{{ url_for('seller_product_new') }}">+ List a new item</a>
+        <a class="btn btn-light" href="{{ url_for('seller_requests') }}">See store requests</a>
+    </div>
+
+    <div class="order-grid">
+        <div class="box">
+            <h3>The store needs these items</h3>
+            <p class="muted small">Products that are low or out of stock. List them to get orders.</p>
+            {% for n in needs %}
+            <div class="need-row">
+                <div class="mini">{{ product_art(n) }}</div>
+                <div><strong>{{ n.product_name }}</strong><br><span class="muted small">{{ n.category_name }} &middot; {{ n.quantity_available }} in stock</span></div>
+                <a class="link-btn" href="{{ url_for('seller_product_new', product=n.product_id) }}">List this item</a>
+            </div>
+            {% else %}
+                <p class="muted">Nothing is running low right now.</p>
+            {% endfor %}
+        </div>
+
+        <div class="box">
+            <h3>Recent orders</h3>
+            {% for o in recent %}
+            <a class="need-row plain" href="{{ url_for('seller_order_detail', po_id=o.po_id) }}">
+                <div><strong>Order #{{ o.po_id }}</strong><br><span class="muted small">{{ o.product_name }} &times; {{ o.quantity_offered or o.quantity_requested }}</span></div>
+                <div>{{ po_pill(o.status) }}</div>
+            </a>
+            {% else %}
+                <p class="muted">No orders yet. When the store orders from you, they appear here.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

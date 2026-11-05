@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Sellers - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Sellers</h2>
+<div class="filters">
+    <a class="btn btn-small" href="{{ url_for('admin_sellers') }}">Sellers</a>
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_seller_items') }}">Seller items</a>
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_purchase_orders') }}">Restock orders</a>
+</div>
+
+<table>
+    <tr><th>Business</th><th>Contact</th><th>City</th><th>GST</th><th>Items</th><th>Orders</th><th>Earned</th><th>Status</th><th>Change</th></tr>
+    {% for s in sellers %}
+    <tr>
+        <td><strong>{{ s.business_name }}</strong><br><span class="muted small">{{ s.email }}</span></td>
+        <td>{{ s.contact_name }}<br><span class="muted small">{{ s.phone }}</span></td>
+        <td>{{ s.city }}</td>
+        <td>{{ s.gst_number or '-' }}</td>
+        <td><a href="{{ url_for('admin_seller_items', seller=s.seller_id) }}">{{ s.listings }}</a></td>
+        <td>{{ s.orders_count }}</td>
+        <td>&#8377; {{ s.earned }}</td>
+        <td>
+            {% if s.status == 'Approved' %}<span class="badge badge-green">Approved</span>
+            {% elif s.status == 'Pending' %}<span class="badge badge-orange">Pending</span>
+            {% else %}<span class="badge badge-red">Suspended</span>{% endif %}
+        </td>
+        <td>
+            <div class="actions">
+                {% if s.status != 'Approved' %}
+                <form method="POST" action="{{ url_for('admin_seller_status', seller_id=s.seller_id) }}">
+                    <input type="hidden" name="status" value="Approved"><button class="btn btn-small" type="submit">Approve</button>
+                </form>
+                {% endif %}
+                {% if s.status != 'Suspended' %}
+                <form method="POST" action="{{ url_for('admin_seller_status', seller_id=s.seller_id) }}" onsubmit="return confirm('Suspend this seller?');">
+                    <input type="hidden" name="status" value="Suspended"><button class="btn btn-small btn-red" type="submit">Suspend</button>
+                </form>
+                {% endif %}
+            </div>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="9" class="empty">No sellers have registered yet.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

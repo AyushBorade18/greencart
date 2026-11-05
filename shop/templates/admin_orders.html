@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Manage Orders - GreenCart{% endblock %}
+{% block content %}
+<h2 class="page-title">Manage Orders</h2>
+
+<div class="filters">
+    <a class="btn btn-small {% if not selected %}{% else %}btn-outline{% endif %}" href="{{ url_for('admin_orders') }}">All</a>
+    {% for s in statuses %}
+        <a class="btn btn-small {% if selected == s %}{% else %}btn-outline{% endif %}"
+           href="{{ url_for('admin_orders', status=s) }}">{{ s }}</a>
+    {% endfor %}
+</div>
+
+{% if orders %}
+<table>
+    <tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th><th>Change status</th></tr>
+    {% for o in orders %}
+    <tr>
+        <td><a href="{{ url_for('admin_order_detail', order_id=o.order_id) }}">#{{ o.order_id }}</a></td>
+        <td>{{ o.customer_name }}<br><span class="muted small">{{ o.city }}</span></td>
+        <td>{{ o.order_date.strftime('%d %b %Y') }}</td>
+        <td>&#8377; {{ o.total_amount }}</td>
+        <td>{{ o.payment_method }}<br><span class="muted small">{{ o.payment_status }}</span></td>
+        <td>{{ status_badge(o.order_status) }}</td>
+        <td>
+            {% set options = next_status[o.order_status] %}
+            {% if options %}
+            <form class="inline-form" method="POST" action="{{ url_for('admin_update_status', order_id=o.order_id) }}">
+                <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+                <select name="new_status">
+                    {% for s in options %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+                </select>
+                <button class="btn btn-small" type="submit">Update</button>
+            </form>
+            {% else %}<span class="muted">Final</span>{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+    <div class="empty">No orders found.</div>
+{% endif %}
+{% endblock %}

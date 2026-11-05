@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Products - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Products
+    <a class="btn btn-small" style="margin-left:12px;" href="{{ url_for('admin_product_new') }}">+ Add product</a>
+</h2>
+
+<table>
+    <tr><th>ID</th><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Visible</th><th>Actions</th></tr>
+    {% for p in products %}
+    <tr>
+        <td>{{ p.product_id }}</td>
+        <td>{{ p.product_name }}</td>
+        <td>{{ p.category_name }}</td>
+        <td>&#8377; {{ p.price }}</td>
+        <td>
+            {{ p.quantity_available }}
+            {% if p.stock_status == 'Low Stock' %}<span class="badge badge-orange">Low</span>
+            {% elif p.stock_status == 'Out of Stock' %}<span class="badge badge-red">Out</span>{% endif %}
+        </td>
+        <td>{% if p.is_active %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-grey">Hidden</span>{% endif %}</td>
+        <td>
+            <div class="actions">
+                <a class="btn btn-small btn-outline" href="{{ url_for('admin_product_edit', product_id=p.product_id) }}">Edit</a>
+                <form method="POST" action="{{ url_for('admin_product_toggle', product_id=p.product_id) }}">
+                    <button class="btn btn-small btn-outline" type="submit">{{ 'Hide' if p.is_active else 'Show' }}</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_product_delete', product_id=p.product_id) }}"
+                      onsubmit="return confirm('Delete this product permanently?');">
+                    <button class="btn btn-small btn-red" type="submit">Delete</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<p class="muted small" style="margin-top:12px;">
+    A product that appears in past orders cannot be deleted (foreign key rule). Use <strong>Hide</strong> to remove it from the shop instead.
+</p>
+{% endblock %}

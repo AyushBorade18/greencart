@@ -1,0 +1,49 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import po_pill %}
+{% block title %}Order #{{ o.po_id }} - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb"><a href="{{ url_for('seller_orders') }}">My orders</a> <span>/</span> Order #{{ o.po_id }}</nav>
+    <h1 class="page-title">Order #{{ o.po_id }} {{ po_pill(o.status) }}</h1>
+
+    <div class="order-grid">
+        <div class="box">
+            <h3>Details</h3>
+            <dl>
+                <dt>Product</dt><dd>{{ o.product_name }}</dd>
+                <dt>Quantity</dt><dd>{{ o.quantity_offered or o.quantity_requested }} (requested {{ o.quantity_requested }})</dd>
+                <dt>Price each</dt><dd>&#8377;{{ '{:,.2f}'.format(o.unit_price) if o.unit_price else '-' }}</dd>
+                <dt>Total</dt><dd><strong>&#8377;{{ '{:,.2f}'.format(o.total_cost) if o.total_cost else '-' }}</strong></dd>
+                <dt>Deliver to</dt><dd>GreenCart warehouse (store admin)</dd>
+                <dt>Store note</dt><dd>{{ o.admin_note or '-' }}</dd>
+                <dt>Your note</dt><dd>{{ o.seller_note or '-' }}</dd>
+                <dt>Shipped</dt><dd>{{ o.shipped_at.strftime('%d %b %Y') if o.shipped_at else '-' }}</dd>
+                <dt>Received by store</dt><dd>{{ o.received_at.strftime('%d %b %Y') if o.received_at else '-' }}</dd>
+            </dl>
+        </div>
+        <div class="box">
+            <h3>Progress</h3>
+            <ul class="timeline">
+                {% for h in history %}
+                <li><strong>{{ h.new_status }}</strong><span class="muted">{{ h.changed_at.strftime('%d %b %Y, %I:%M %p') }}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    {% if o.status in ['Requested', 'Accepted'] %}
+    <form class="box action-box" method="POST" action="{{ url_for('seller_order_action', po_id=o.po_id) }}">
+        <input type="hidden" name="next" value="{{ url_for('seller_order_detail', po_id=o.po_id) }}">
+        <label>Note for the store (optional)<input type="text" name="note"></label>
+        <div class="actions-row">
+            {% if o.status == 'Requested' %}
+                <button class="btn" name="action" value="accept" type="submit">Accept order</button>
+                <button class="btn btn-light" name="action" value="decline" type="submit">Decline</button>
+            {% else %}
+                <button class="btn" name="action" value="ship" type="submit">I have shipped the goods</button>
+            {% endif %}
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

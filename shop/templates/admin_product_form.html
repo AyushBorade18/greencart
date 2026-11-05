@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Add product' if is_new else 'Edit product' }} - GreenCart Admin{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin_products') }}">&larr; Back to products</a></p>
+
+<div class="auth-card" style="max-width:560px;">
+    <h2>{{ 'Add a new product' if is_new else 'Edit product' }}</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="product_name">Product name</label>
+        <input type="text" id="product_name" name="product_name" value="{{ product.get('product_name', '') }}" required>
+
+        {% if not categories %}
+        <p class="notice warn">There are no categories yet. <a href="{{ url_for('admin_categories') }}">Add a category first</a>, then come back.</p>
+        {% endif %}
+        <label for="category_id">Category</label>
+        <select id="category_id" name="category_id" required>
+            {% for c in categories %}
+                <option value="{{ c.category_id }}"
+                    {% if product.get('category_id')|string == c.category_id|string %}selected{% endif %}>
+                    {{ c.category_name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="3" maxlength="500">{{ product.get('description') or '' }}</textarea>
+
+        <label for="images">Add pictures (PNG, JPG or WEBP, up to 2 MB each, up to {{ max_images or 6 }} in total)</label>
+        <input type="file" id="images" name="images" accept="image/png,image/jpeg,image/webp" multiple>
+
+        <label for="image_url">Or add a picture by link (optional)</label>
+        <input type="text" id="image_url" name="image_url" placeholder="https://...  (link to a picture)" value="{% if is_new %}{{ product.get('image_url') or '' }}{% endif %}">
+
+        <label for="price">Price (&#8377;)</label>
+        <input type="number" id="price" name="price" step="0.01" min="0.01" value="{{ product.get('price', '') }}" required>
+
+        {% if is_new %}
+        <label for="stock">Opening stock (items)</label>
+        <input type="number" id="stock" name="stock" min="0" value="{{ product.get('stock', 0) }}" required>
+
+        <label for="reorder_level">Reorder level (low-stock warning)</label>
+        <input type="number" id="reorder_level" name="reorder_level" min="0" value="{{ product.get('reorder_level', 5) }}" required>
+        {% else %}
+        <label style="display:flex; gap:8px; align-items:center;">
+            <input type="checkbox" name="is_active" style="width:auto;" {% if product.get('is_active') %}checked{% endif %}>
+            Visible in the shop
+        </label>
+        <p class="muted small">Stock is changed from the Inventory page. Price changes are recorded automatically in the price history.</p>
+        {% endif %}
+
+        <button class="btn" type="submit">{{ 'Add Product' if is_new else 'Save Changes' }}</button>
+    </form>
+</div>
+
+{% if pictures %}
+<div class="auth-card" style="max-width:560px; margin-top:20px;">
+    <h3>Current pictures</h3>
+    <p class="muted small">The first picture is the cover shown in the shop and on product cards.</p>
+    <div class="pic-grid">
+        {% for pic in pictures %}
+        <div class="pic">
+            <img src="{{ pic.image_url }}" alt="">
+            {% if loop.first %}<span class="badge badge-green">Cover</span>{% endif %}
+            {% if pic.image_id %}
+            <div class="pic-actions">
+                {% if not loop.first %}
+                <form method="POST" action="{{ url_for('admin_image_cover', product_id=product.product_id, image_id=pic.image_id) }}"><button class="btn btn-small" type="submit">Make cover</button></form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin_image_delete', product_id=product.product_id, image_id=pic.image_id) }}" onsubmit="return confirm('Remove this picture?');"><button class="btn btn-small btn-red" type="submit">Remove</button></form>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

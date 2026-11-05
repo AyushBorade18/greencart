@@ -1,0 +1,38 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import po_pill %}
+{% block title %}Earnings - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Earnings</h1>
+    <p class="muted">You are paid for restock orders once the store marks the goods as received.</p>
+
+    <div class="kpis">
+        <div class="kpi"><strong>&#8377;{{ '{:,.2f}'.format(totals.earned or 0) }}</strong><span>Earned (received)</span></div>
+        <div class="kpi"><strong>&#8377;{{ '{:,.2f}'.format(totals.pending or 0) }}</strong><span>In progress (accepted / shipped)</span></div>
+        <div class="kpi"><strong>{{ totals.completed or 0 }}</strong><span>Completed orders</span></div>
+    </div>
+
+    <h2 class="section-title">By month</h2>
+    {% if monthly %}
+    <div class="items-table">
+        {% for m in monthly %}
+        <div class="items-row"><strong>{{ m.month }}</strong><span>{{ m.orders_count }} order{{ '' if m.orders_count == 1 else 's' }}</span><strong>&#8377;{{ '{:,.2f}'.format(m.amount) }}</strong><span></span></div>
+        {% endfor %}
+    </div>
+    {% else %}<p class="muted">No completed orders yet.</p>{% endif %}
+
+    <h2 class="section-title">Recent completed orders</h2>
+    {% if paid %}
+    <div class="items-table">
+        {% for o in paid %}
+        <div class="items-row">
+            <a href="{{ url_for('seller_order_detail', po_id=o.po_id) }}">#{{ o.po_id }} &middot; {{ o.product_name }}</a>
+            <span>{{ o.quantity_offered }} &times; &#8377;{{ '{:,.2f}'.format(o.unit_price) }}</span>
+            <strong>&#8377;{{ '{:,.2f}'.format(o.total_cost) }}</strong>
+            <span class="muted">{{ o.received_at.strftime('%d %b %Y') if o.received_at else '' }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}<p class="muted">Nothing received yet.</p>{% endif %}
+</div>
+{% endblock %}

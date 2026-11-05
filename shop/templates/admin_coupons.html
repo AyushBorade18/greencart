@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Coupons - GreenCart{% endblock %}
+{% block content %}
+<h2 class="page-title">Coupons</h2>
+<p class="muted">Customers type a code in their cart. Percentage coupons can be capped with a maximum discount.</p>
+
+<div class="panel">
+    <h4>Create a coupon</h4>
+    <form method="POST" action="{{ url_for('admin_coupon_add') }}" class="grid-form">
+        <label>Code (letters/numbers)<input type="text" name="code" maxlength="20" placeholder="SAVE10" value="{{ form.get('code', '') }}" required></label>
+        <label>Type
+            <select name="discount_type">
+                <option value="percent" {% if form.get('discount_type') == 'percent' %}selected{% endif %}>Percentage (%)</option>
+                <option value="flat" {% if form.get('discount_type') == 'flat' %}selected{% endif %}>Flat amount (&#8377;)</option>
+            </select>
+        </label>
+        <label>Discount value<input type="number" name="discount_value" step="0.01" min="0.01" value="{{ form.get('discount_value', '') }}" required></label>
+        <label>Minimum order (&#8377;)<input type="number" name="min_order_amount" step="1" min="0" value="{{ form.get('min_order_amount', '0') }}"></label>
+        <label>Maximum discount (&#8377;, optional)<input type="number" name="max_discount" step="1" min="1" value="{{ form.get('max_discount', '') }}"></label>
+        <label>Total uses (blank = unlimited)<input type="number" name="usage_limit" min="1" value="{{ form.get('usage_limit', '') }}"></label>
+        <label>Uses per customer<input type="number" name="per_customer_limit" min="1" value="{{ form.get('per_customer_limit', '1') }}"></label>
+        <label>Starts (optional)<input type="datetime-local" name="valid_from" value="{{ form.get('valid_from', '') }}"></label>
+        <label>Ends (optional)<input type="datetime-local" name="valid_to" value="{{ form.get('valid_to', '') }}"></label>
+        <label>Note shown to you<input type="text" name="description" maxlength="200" value="{{ form.get('description', '') }}"></label>
+        <button class="btn" type="submit">Create coupon</button>
+    </form>
+</div>
+
+<h3 class="section-title">All coupons</h3>
+<table>
+    <tr><th>Code</th><th>Discount</th><th>Min order</th><th>Used</th><th>Given</th><th>Valid</th><th>Status</th><th></th></tr>
+    {% for c in coupons %}
+    <tr>
+        <td><strong>{{ c.code }}</strong>{% if c.description %}<br><span class="muted">{{ c.description }}</span>{% endif %}</td>
+        <td>{% if c.discount_type == 'percent' %}{{ '%g'|format(c.discount_value) }}%{% if c.max_discount %} (max &#8377;{{ '%g'|format(c.max_discount) }}){% endif %}{% else %}&#8377;{{ '%g'|format(c.discount_value) }} off{% endif %}</td>
+        <td>&#8377;{{ '%g'|format(c.min_order_amount) }}</td>
+        <td>{{ c.used }}{% if c.usage_limit %} / {{ c.usage_limit }}{% endif %}</td>
+        <td>&#8377;{{ '{:,.2f}'.format(c.given) }}</td>
+        <td>{{ c.valid_from.strftime('%d %b %Y') if c.valid_from else 'now' }} &ndash; {{ c.valid_to.strftime('%d %b %Y') if c.valid_to else 'no end' }}</td>
+        <td>{% if not c.is_active %}<span class="badge badge-red">Off</span>
+            {% elif c.valid_to and c.valid_to < now %}<span class="badge badge-red">Expired</span>
+            {% else %}<span class="badge badge-green">Active</span>{% endif %}</td>
+        <td>
+            <form class="inline-form" method="POST" action="{{ url_for('admin_coupon_toggle', coupon_id=c.coupon_id) }}"><button class="btn btn-small" type="submit">{{ 'Switch off' if c.is_active else 'Switch on' }}</button></form>
+            <form class="inline-form" method="POST" action="{{ url_for('admin_coupon_delete', coupon_id=c.coupon_id) }}" onsubmit="return confirm('Delete this coupon?');"><button class="btn btn-small btn-red" type="submit">Delete</button></form>
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="muted">No coupons yet. Create one above, for example WELCOME10: 10% off, minimum &#8377;499.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

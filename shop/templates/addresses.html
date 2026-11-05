@@ -1,0 +1,53 @@
+{% extends "store_base.html" %}
+{% block title %}My addresses - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My addresses</h1>
+    {% include "_account_nav.html" %}
+    <p class="muted">Save the places you ship to, then pick one at checkout.</p>
+
+    <div class="address-grid">
+        {% for a in addresses %}
+        <div class="box address-card">
+            <div class="address-top"><strong>{{ a.label }}</strong> {% if a.is_default %}<span class="pill pill-dark">Default</span>{% endif %}</div>
+            <p>{{ a.full_name }}<br>{{ a.line1 }}<br>{{ a.city }} {{ a.pincode }}<br>Phone: {{ a.phone }}</p>
+            <div class="actions-row">
+                {% if not a.is_default %}
+                <form method="POST" action="{{ url_for('address_default', address_id=a.address_id) }}"><button class="link-btn" type="submit">Make default</button></form>
+                {% endif %}
+                <form method="POST" action="{{ url_for('address_delete', address_id=a.address_id) }}" onsubmit="return confirm('Delete this address?');"><button class="link-btn" type="submit">Delete</button></form>
+            </div>
+            <details class="accordion">
+                <summary>Edit</summary>
+                <form method="POST" action="{{ url_for('address_save') }}" class="grid-form">
+                    <input type="hidden" name="address_id" value="{{ a.address_id }}">
+                    <label>Label<input type="text" name="label" maxlength="30" value="{{ a.label }}"></label>
+                    <label>Full name<input type="text" name="full_name" maxlength="100" value="{{ a.full_name }}" required></label>
+                    <label>Phone<input type="text" name="phone" maxlength="10" inputmode="numeric" value="{{ a.phone }}" required></label>
+                    <label>Pincode<input type="text" name="pincode" maxlength="6" inputmode="numeric" value="{{ a.pincode }}" required></label>
+                    <label class="full">Address<input type="text" name="line1" maxlength="200" value="{{ a.line1 }}" required></label>
+                    <label>City<input type="text" name="city" maxlength="50" value="{{ a.city }}" required></label>
+                    <button class="btn full" type="submit">Save changes</button>
+                </form>
+            </details>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if addresses|length < max_addresses %}
+    <form class="form-box" method="POST" action="{{ url_for('address_save') }}">
+        <h3>Add a new address</h3>
+        <div class="grid-form">
+            <label>Label (Home, Office ...)<input type="text" name="label" maxlength="30" placeholder="Home"></label>
+            <label>Full name<input type="text" name="full_name" maxlength="100" value="{{ profile.full_name }}" required></label>
+            <label>Phone (10 digits)<input type="text" name="phone" maxlength="10" inputmode="numeric" value="{{ profile.phone }}" required></label>
+            <label>Pincode (6 digits)<input type="text" name="pincode" maxlength="6" inputmode="numeric" required></label>
+            <label class="full">Address<input type="text" name="line1" maxlength="200" placeholder="House no, street, area" required></label>
+            <label>City<input type="text" name="city" maxlength="50" required></label>
+            <label class="check full"><input type="checkbox" name="is_default" value="1"> Make this my default address</label>
+            <button class="btn btn-wide full" type="submit">Save address</button>
+        </div>
+    </form>
+    {% else %}<p class="muted">You have saved the maximum of {{ max_addresses }} addresses.</p>{% endif %}
+</div>
+{% endblock %}

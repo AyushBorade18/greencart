@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Reports - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Reports</h2>
+
+<div class="two-col">
+    <div class="panel">
+        <h4>Revenue by category</h4>
+        {% for r in by_category %}
+        <div class="bar-row">
+            <div class="bar-label">{{ r.category_name }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ r.pct }}%;"></div></div>
+            <div class="bar-value">&#8377; {{ r.revenue }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="panel">
+        <h4>Revenue by month</h4>
+        {% for r in monthly %}
+        <div class="bar-row">
+            <div class="bar-label">{{ r.sales_month }} <span class="muted small">({{ r.orders_count }} orders)</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ r.pct }}%;"></div></div>
+            <div class="bar-value">&#8377; {{ r.revenue }}</div>
+        </div>
+        {% else %}<p class="muted">No sales yet.</p>{% endfor %}
+    </div>
+
+    <div class="panel">
+        <h4>Top 5 products (units sold)</h4>
+        {% for r in top_products %}
+        <div class="bar-row">
+            <div class="bar-label">{{ r.product_name }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ r.pct }}%;"></div></div>
+            <div class="bar-value">{{ r.units_sold }} sold</div>
+        </div>
+        {% else %}<p class="muted">No sales yet.</p>{% endfor %}
+    </div>
+
+    <div class="panel">
+        <h4>Payments by method (cancelled orders excluded)</h4>
+        {% for r in payments %}
+        <div class="bar-row">
+            <div class="bar-label">{{ r.payment_method }} <span class="muted small">({{ r.orders_count }})</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ r.pct }}%;"></div></div>
+            <div class="bar-value">&#8377; {{ r.amount }}</div>
+        </div>
+        {% else %}<p class="muted">No payments yet.</p>{% endfor %}
+    </div>
+
+    <div class="panel">
+        <h4>Orders by status</h4>
+        {% for r in statuses %}
+        <div class="bar-row">
+            <div class="bar-label">{{ r.order_status }}</div>
+            <div class="bar-track"><div class="bar-fill" style="width: {{ r.pct }}%;"></div></div>
+            <div class="bar-value">{{ r.n }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="panel">
+        <h4>Top customers</h4>
+        <table>
+            <tr><th>Customer</th><th>Orders</th><th>Spent</th><th>Tier</th></tr>
+            {% for c in top_customers %}
+            <tr><td>{{ c.full_name }}</td><td>{{ c.orders_count }}</td><td>&#8377; {{ c.total_spent }}</td><td>{{ c.tier }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+
+<h3 class="section-title">Audit logs <span class="muted small">(written automatically by triggers)</span></h3>
+<div class="two-col">
+    <div class="panel">
+        <h4>Latest price changes</h4>
+        {% if price_log %}
+        <table>
+            <tr><th>When</th><th>Product</th><th>Old</th><th>New</th></tr>
+            {% for r in price_log %}
+            <tr><td>{{ r.changed_at.strftime('%d %b, %I:%M %p') }}</td><td>{{ r.product_name }}</td>
+                <td>&#8377; {{ r.old_price }}</td><td>&#8377; {{ r.new_price }}</td></tr>
+            {% endfor %}
+        </table>
+        {% else %}<p class="muted">No price changes yet.</p>{% endif %}
+    </div>
+    <div class="panel">
+        <h4>Latest order status changes</h4>
+        <table>
+            <tr><th>When</th><th>Order</th><th>From</th><th>To</th></tr>
+            {% for r in status_log %}
+            <tr><td>{{ r.changed_at.strftime('%d %b, %I:%M %p') }}</td><td>#{{ r.order_id }}</td>
+                <td>{{ r.old_status or '-' }}</td><td>{{ status_badge(r.new_status) }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

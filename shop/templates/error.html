@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>{{ title }} - GreenCart</title>
+    {% include "_pwa.html" %}
+    <link rel="stylesheet" href="/assets/store.css">
+</head>
+<body>
+<main>
+    <div class="auth-wrap">
+        <div class="auth-box" style="text-align:center;">
+            <p class="muted">Error {{ code }}</p>
+            <h1>{{ title }}</h1>
+            <p class="muted">{{ text }}</p>
+            <a class="btn" href="/">Go to home</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

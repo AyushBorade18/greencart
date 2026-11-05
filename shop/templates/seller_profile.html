@@ -1,0 +1,20 @@
+{% extends "seller_base.html" %}
+{% block title %}Profile - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Business profile</h1>
+    <p class="muted">Account status: <strong>{{ s.status }}</strong> &middot; Email: {{ s.email }}</p>
+    <form class="form-box" method="POST">
+        <div class="grid-form">
+            <label>Business name<input type="text" name="business_name" value="{{ s.business_name }}" required></label>
+            <label>Contact person<input type="text" name="contact_name" value="{{ s.contact_name }}" required></label>
+            <label>Phone (10 digits)<input type="text" name="phone" maxlength="10" value="{{ s.phone }}" required></label>
+            <label>GST number<input type="text" name="gst_number" maxlength="20" value="{{ s.gst_number or '' }}"></label>
+            <label class="full">Address<input type="text" name="address" value="{{ s.address }}" required></label>
+            <label>City<input type="text" name="city" value="{{ s.city }}" required></label>
+            <label>Pincode (6 digits)<input type="text" name="pincode" maxlength="6" value="{{ s.pincode }}" required></label>
+            <button class="btn btn-wide full" type="submit">Save profile</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+<meta name="theme-color" content="#141414">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GreenCart">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+<script>
+/* No pinch or double-tap zoom (iOS Safari ignores user-scalable, so it is stopped here as well) */
+document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+document.addEventListener("touchmove", function (e) { if (e.scale && e.scale !== 1) { e.preventDefault(); } }, { passive: false });
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+    });
+}
+</script>

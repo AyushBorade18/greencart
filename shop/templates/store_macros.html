@@ -1,0 +1,86 @@
+{# Small reusable pieces for the storefront #}
+
+{# Product picture: the admin's image link if there is one, otherwise a clean illustration #}
+{% macro product_art(p) %}
+    {%- set slug = {'Electronics': 'electronics', 'Fashion': 'fashion', 'Home & Kitchen': 'home',
+                    'Books': 'books', 'Sports & Fitness': 'sports'}.get(p.category_name, 'other') -%}
+    <div class="art art-{{ slug }}">
+        {% if slug == 'electronics' %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 58V48a28 28 0 0 1 56 0v10"/><rect x="14" y="54" width="14" height="24" rx="6"/><rect x="68" y="54" width="14" height="24" rx="6"/></svg>
+        {% elif slug == 'fashion' %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M32 18 16 28l8 14 8-4v40h32V38l8 4 8-14-16-10c-4 6-28 6-32 0Z"/></svg>
+        {% elif slug == 'home' %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M34 24h28l10 30H24Z"/><path d="M48 54v20M36 76h24"/><path d="M48 12v6"/></svg>
+        {% elif slug == 'books' %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 20h44a8 8 0 0 1 8 8v48H30a8 8 0 0 1-8-8Z"/><path d="M22 68a8 8 0 0 1 8-8h44"/><path d="M36 32h24"/></svg>
+        {% elif slug == 'sports' %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 40v16M24 30v36M72 30v36M82 40v16M24 48h48"/></svg>
+        {% else %}
+            <svg viewBox="0 0 96 96" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M24 34h48l4 44H20Z"/><path d="M36 34v-6a12 12 0 0 1 24 0v6"/></svg>
+        {% endif %}
+        {% if p.image_url %}<img src="{{ p.image_url }}" alt="{{ p.product_name }}" loading="lazy" decoding="async" onerror="this.remove()">{% endif %}
+    </div>
+{% endmacro %}
+
+{# Star rating drawn with text: 4.00 -> 4 filled stars #}
+{% macro stars(rating) %}
+    {%- set full = rating|round|int -%}
+    <span class="stars" aria-label="{{ rating }} out of 5">{{ '★' * full }}<span class="stars-off">{{ '★' * (5 - full) }}</span></span>
+{% endmacro %}
+
+{% macro status_pill(status) %}
+    {% if status == 'Delivered' %}<span class="pill pill-dark">Delivered</span>
+    {% elif status == 'Cancelled' %}<span class="pill pill-red">Cancelled</span>
+    {% elif status == 'Shipped' %}<span class="pill pill-accent">Shipped</span>
+    {% else %}<span class="pill">{{ status }}</span>{% endif %}
+{% endmacro %}
+
+{# One product card used on the shop page and in "You may also like" #}
+{% macro product_card(p, back, wished=[]) %}
+<article class="product-card">
+    <div class="media-wrap">
+        <a class="card-media" href="{{ url_for('product_page', product_id=p.product_id) }}">
+            {{ product_art(p) }}
+            {% if p.quantity_available == 0 %}<span class="badge badge-sold">Sold out</span>{% endif %}
+        </a>
+        <form class="wish-form" method="POST" action="{{ url_for('wishlist_toggle') }}">
+            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+            <input type="hidden" name="next" value="{{ back }}">
+            <button type="submit" class="wish-btn {{ 'on' if p.product_id in wished else '' }}"
+                    aria-label="{{ 'Remove from wishlist' if p.product_id in wished else 'Save to wishlist' }}"
+                    title="{{ 'Remove from wishlist' if p.product_id in wished else 'Save to wishlist' }}">
+                <svg viewBox="0 0 24 24"><path d="M12 20s-7-4.6-9-9.2C1.6 7.3 3.8 4 7 4c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.2 0 5.4 3.3 4 6.8-2 4.6-9 9.2-9 9.2Z"/></svg>
+            </button>
+        </form>
+        <form class="quick-add" method="POST" action="{{ url_for('cart_add') }}">
+            <input type="hidden" name="product_id" value="{{ p.product_id }}">
+            <input type="hidden" name="quantity" value="1">
+            <input type="hidden" name="next" value="{{ back }}">
+            <button type="submit" {% if p.quantity_available == 0 %}disabled{% endif %}>
+                {{ 'Sold out' if p.quantity_available == 0 else 'Add to cart' }}
+            </button>
+        </form>
+    </div>
+    <div class="card-info">
+        <span class="card-cat">{{ p.category_name }}</span>
+        <h3><a href="{{ url_for('product_page', product_id=p.product_id) }}">{{ p.product_name }}</a></h3>
+        <div class="card-stock {{ 'low' if p.stock_status == 'Low Stock' else '' }}">
+            {% if p.quantity_available == 0 %}Sold out
+            {% elif p.stock_status == 'Low Stock' %}Only {{ p.quantity_available }} left
+            {% else %}{{ p.quantity_available }} in stock{% endif %}
+        </div>
+        <div class="card-row">
+            <span class="price">&#8377;{{ '{:,.2f}'.format(p.price) }}</span>
+            <span class="card-rating">{% if p.review_count %}{{ stars(p.avg_rating) }} <span class="muted">({{ p.review_count }})</span>{% endif %}</span>
+        </div>
+    </div>
+</article>
+{% endmacro %}
+
+{# Status label for a purchase order (seller pages) #}
+{% macro po_pill(status) %}
+    {% if status in ['Received', 'Accepted'] %}<span class="pill pill-dark">{{ status }}</span>
+    {% elif status in ['Declined', 'Cancelled'] %}<span class="pill pill-red">{{ status }}</span>
+    {% elif status in ['Offered', 'Shipped'] %}<span class="pill pill-accent">{{ status }}</span>
+    {% else %}<span class="pill">{{ status }}</span>{% endif %}
+{% endmacro %}

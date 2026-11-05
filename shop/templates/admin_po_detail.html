@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "macros.html" import po_badge %}
+{% block title %}Restock order #{{ o.po_id }} - GreenCart Admin{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('admin_purchase_orders') }}">&larr; Back to restock orders</a></p>
+<h2 class="page-title">Restock order #{{ o.po_id }} {{ po_badge(o.status) }}</h2>
+
+<div class="two-col">
+    <div class="panel">
+        <h4>Order details</h4>
+        <p><strong>Product:</strong> <a href="{{ url_for('admin_restock_page', product_id=o.product_id) }}">{{ o.product_name }}</a> ({{ o.stock_now }} in stock now)</p>
+        <p><strong>Seller:</strong> {{ o.seller_name or 'Not chosen yet (open to all sellers)' }}</p>
+        <p><strong>Quantity requested:</strong> {{ o.quantity_requested }}</p>
+        <p><strong>Quantity offered / agreed:</strong> {{ o.quantity_offered or '-' }}</p>
+        <p><strong>Price each:</strong> {% if o.unit_price %}&#8377; {{ o.unit_price }}{% else %}-{% endif %}
+            {% if o.max_unit_price %}<span class="muted">(your limit: &#8377; {{ o.max_unit_price }})</span>{% endif %}</p>
+        <p><strong>Total cost:</strong> {% if o.total_cost %}&#8377; {{ o.total_cost }}{% else %}-{% endif %}</p>
+        <p><strong>Your note:</strong> {{ o.admin_note or '-' }}</p>
+        <p><strong>Seller's note:</strong> {{ o.seller_note or '-' }}</p>
+        <p><strong>Shipped:</strong> {{ o.shipped_at.strftime('%d %b %Y') if o.shipped_at else '-' }}
+           &middot; <strong>Received:</strong> {{ o.received_at.strftime('%d %b %Y') if o.received_at else '-' }}</p>
+    </div>
+    <div class="panel">
+        <h4>Progress</h4>
+        <ul class="timeline">
+            {% for h in history %}
+            <li><strong>{{ h.new_status }}</strong> <span class="muted">{{ h.changed_at.strftime('%d %b %Y, %I:%M %p') }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="panel">
+    <h4>What you can do now</h4>
+    {% if o.status == 'Offered' %}
+        <p>{{ o.seller_name }} offered <strong>{{ o.quantity_offered }}</strong> items at <strong>&#8377; {{ o.unit_price }}</strong> each (total &#8377; {{ o.total_cost }}).</p>
+        <div class="actions">
+            <form method="POST" action="{{ url_for('admin_po_action', po_id=o.po_id) }}"><input type="hidden" name="action" value="accept_offer"><button class="btn" type="submit">Accept offer</button></form>
+            <form method="POST" action="{{ url_for('admin_po_action', po_id=o.po_id) }}"><input type="hidden" name="action" value="reject_offer"><button class="btn btn-outline" type="submit">Reject (ask all sellers again)</button></form>
+        </div>
+    {% elif o.status == 'Open' %}
+        <p>Waiting for a seller to send an offer. All approved sellers can see this request.</p>
+    {% elif o.status == 'Requested' %}
+        <p>Waiting for {{ o.seller_name }} to accept the order.</p>
+    {% elif o.status == 'Accepted' %}
+        <p>{{ o.seller_name }} has accepted. Waiting for them to ship the goods.</p>
+    {% elif o.status == 'Shipped' %}
+        <p>{{ o.seller_name }} has shipped the goods. When they arrive, mark them received. <strong>This adds {{ o.quantity_offered }} items to the inventory.</strong></p>
+        <form method="POST" action="{{ url_for('admin_po_action', po_id=o.po_id) }}" onsubmit="return confirm('Goods received? This increases the stock.');">
+            <input type="hidden" name="action" value="receive"><button class="btn" type="submit">Mark as received and restock</button>
+        </form>
+    {% elif o.status == 'Received' %}
+        <p>Received on {{ o.received_at.strftime('%d %b %Y') }}. The stock was increased by {{ o.quantity_offered }}.</p>
+    {% else %}
+        <p>This order is {{ o.status|lower }}.</p>
+    {% endif %}
+
+    {% if o.status in ['Open', 'Offered', 'Requested', 'Accepted'] %}
+    <form method="POST" action="{{ url_for('admin_po_action', po_id=o.po_id) }}" onsubmit="return confirm('Cancel this order?');" style="margin-top:14px;">
+        <input type="hidden" name="action" value="cancel"><button class="btn btn-small btn-red" type="submit">Cancel order</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

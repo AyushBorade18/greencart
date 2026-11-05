@@ -1,0 +1,29 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import status_pill %}
+{% block title %}My orders - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My orders</h1>
+    {% set active = 'orders' %}{% include "_account_nav.html" %}
+
+    {% if orders %}
+    <div class="order-list">
+        {% for o in orders %}
+        <a class="order-row" href="{{ url_for('order_detail', order_id=o.order_id) }}">
+            <div><strong>Order #{{ o.order_id }}</strong><span class="muted">{{ o.order_date.strftime('%d %b %Y') }}</span></div>
+            <div><span class="muted">Items</span>{{ o.total_units }}</div>
+            <div><span class="muted">Total</span>&#8377;{{ '{:,.2f}'.format(o.total_amount) }}</div>
+            <div><span class="muted">Payment</span>{{ o.payment_method }} &middot; {{ o.payment_status }}</div>
+            <div>{{ status_pill(o.order_status) }}</div>
+            <span class="row-arrow">&rarr;</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>You have not placed any orders yet.</p>
+        <a class="btn" href="{{ url_for('shop') }}">Start shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>{% block title %}Seller portal - GreenCart{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="/assets/store.css">
+    {% include "_pwa.html" %}
+</head>
+<body>
+
+<div class="announce">Seller portal &nbsp;&middot;&nbsp; Sell wholesale to GreenCart and restock the store</div>
+
+<header class="site-header">
+    <div class="header-inner">
+        {% if session.get('seller_id') %}
+        <button class="icon-btn menu-btn" id="open-menu" aria-label="Menu">
+            <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <nav class="main-nav" id="main-nav">
+            <a href="{{ url_for('seller_dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('seller_products') }}">My products</a>
+            <a href="{{ url_for('seller_requests') }}">Requests</a>
+            <a href="{{ url_for('seller_orders') }}">Orders</a>
+            <a href="{{ url_for('seller_earnings') }}">Earnings</a>
+            <a href="{{ url_for('seller_profile') }}">Profile</a>
+        </nav>
+        {% else %}
+        <span class="header-space"></span>
+        {% endif %}
+
+        <a class="logo" href="{{ url_for('seller_dashboard') if session.get('seller_id') else url_for('home') }}">GreenCart<span class="seller-tag">Seller</span></a>
+
+        <div class="header-actions">
+            {% if session.get('seller_id') %}
+                <span class="text-link muted">{{ session['seller_name'] }}</span>
+                <a class="text-link" href="{{ url_for('logout') }}">Log out</a>
+            {% else %}
+                <a class="text-link" href="{{ url_for('seller_login') }}">Seller login</a>
+                <a class="text-link" href="{{ url_for('login') }}">Customer login</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toasts">
+        {% for category, message in messages %}<div class="toast {{ category }}">{{ message }}</div>{% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
+{% if g.seller and g.seller.status != 'Approved' %}
+<div class="toasts"><div class="toast error" style="animation:none;">Your seller account is <strong>{{ g.seller.status }}</strong>. The store admin must approve it before you can list items.</div></div>
+{% endif %}
+
+<main>
+{% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer slim">
+    <div class="footer-bottom"><span>&copy; GreenCart seller portal</span><span>Questions? Contact the store admin.</span></div>
+</footer>
+
+<script src="/assets/store.js"></script>
+</body>
+</html>

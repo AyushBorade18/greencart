@@ -1,0 +1,46 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import product_art %}
+{% block title %}My products - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My products</h1>
+    <div class="actions-row">
+        <a class="btn" href="{{ url_for('seller_product_new') }}">+ List a new item</a>
+    </div>
+
+    {% if items %}
+    <div class="product-grid">
+        {% for i in items %}
+        <article class="product-card">
+            <div class="media-wrap">
+                <a class="card-media" href="{{ url_for('seller_product_edit', listing_id=i.listing_id) }}">
+                    {{ product_art(i) }}
+                    {% if not i.is_active %}<span class="badge badge-sold">Hidden</span>{% endif %}
+                </a>
+            </div>
+            <div class="card-info">
+                <span class="card-cat">{{ i.category_name }}{% if i.product_id %} &middot; in store{% else %} &middot; new item{% endif %}</span>
+                <h3><a href="{{ url_for('seller_product_edit', listing_id=i.listing_id) }}">{{ i.item_name }}</a></h3>
+                <div class="card-stock">{{ i.quantity_available }} available &middot; min order {{ i.min_order_qty }}</div>
+                <div class="card-row"><span class="price">&#8377;{{ '{:,.2f}'.format(i.unit_price) }} <span class="muted small">each</span></span></div>
+                <div class="card-foot">
+                    <a class="btn btn-light btn-small" href="{{ url_for('seller_product_edit', listing_id=i.listing_id) }}">Edit</a>
+                    <form method="POST" action="{{ url_for('seller_product_toggle', listing_id=i.listing_id) }}">
+                        <button class="btn btn-light btn-small" type="submit">{{ 'Hide' if i.is_active else 'Show' }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('seller_product_delete', listing_id=i.listing_id) }}" onsubmit="return confirm('Delete this listing?');">
+                        <button class="btn btn-light btn-small" type="submit">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>You have not listed anything yet.</p>
+        <a class="btn" href="{{ url_for('seller_product_new') }}">List your first item</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

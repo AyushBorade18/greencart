@@ -1,0 +1,29 @@
+{% extends "store_base.html" %}
+{% block title %}My returns - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My returns</h1>
+    {% include "_account_nav.html" %}
+    <p class="muted">You can return delivered items within {{ window }} days. Open the order and choose <strong>Return an item</strong>.</p>
+
+    {% for r in returns %}
+    <div class="box return-card">
+        <div class="return-top">
+            <strong>{{ r.product_name }} &times; {{ r.quantity }}</strong>
+            <span class="pill {{ 'pill-dark' if r.status == 'Refunded' else ('pill-red' if r.status == 'Rejected' else 'pill-accent') }}">{{ r.status }}</span>
+        </div>
+        <p class="muted small">Order <a href="{{ url_for('order_detail', order_id=r.order_id) }}">#{{ r.order_id }}</a>
+            &middot; requested {{ r.created_at.strftime('%d %b %Y') }} &middot; reason: {{ r.reason }}</p>
+        {% if r.details %}<p>{{ r.details }}</p>{% endif %}
+        <p><strong>Refund: &#8377;{{ '{:,.2f}'.format(r.refund_amount) }}</strong>
+            {% if r.status == 'Refunded' %}<span class="muted"> &middot; paid back</span>{% endif %}</p>
+        {% if r.admin_note %}<p class="muted small">Note from the store: {{ r.admin_note }}</p>{% endif %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>You have not returned anything.</p>
+        <a class="btn" href="{{ url_for('orders') }}">View my orders</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

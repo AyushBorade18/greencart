@@ -1,0 +1,100 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import product_card %}
+{% block title %}{{ current.category_name if current else 'All products' }} - GreenCart{% endblock %}
+{% block content %}
+{% set back = request.full_path.rstrip('?') %}
+
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="{{ url_for('home') }}">Home</a> <span>/</span>
+        {% if current %}<a href="{{ url_for('shop') }}">Shop</a> <span>/</span> {{ current.category_name }}
+        {% else %}Shop{% endif %}
+    </nav>
+
+    <h1 class="page-title">{{ current.category_name if current else ('Search: ' ~ search if search else 'All products') }}</h1>
+    {% if current and current.description %}<p class="muted lead">{{ current.description }}</p>{% endif %}
+
+    <div class="chips">
+        <a class="chip {% if not category_id %}active{% endif %}" href="{{ url_for('shop') }}">View all</a>
+        {% for c in categories %}
+            <a class="chip {% if category_id == c.category_id %}active{% endif %}"
+               href="{{ url_for('shop', category=c.category_id) }}">{{ c.category_name }} <span>{{ c.product_count }}</span></a>
+        {% endfor %}
+    </div>
+
+    <form method="GET" action="{{ url_for('shop') }}" id="filter-form">
+        <div class="toolbar">
+            <button type="button" class="filter-btn" id="open-filter">
+                <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg> Filter
+            </button>
+            <span class="count">{{ products|length }} product{{ '' if products|length == 1 else 's' }}</span>
+            <label class="sort">Sort by
+                <select name="sort" onchange="this.form.submit()">
+                    <option value="featured" {% if sort == 'featured' %}selected{% endif %}>Featured</option>
+                    <option value="best"     {% if sort == 'best' %}selected{% endif %}>Best selling</option>
+                    <option value="rating"   {% if sort == 'rating' %}selected{% endif %}>Top rated</option>
+                    <option value="az"       {% if sort == 'az' %}selected{% endif %}>Alphabetically, A-Z</option>
+                    <option value="za"       {% if sort == 'za' %}selected{% endif %}>Alphabetically, Z-A</option>
+                    <option value="low"      {% if sort == 'low' %}selected{% endif %}>Price, low to high</option>
+                    <option value="high"     {% if sort == 'high' %}selected{% endif %}>Price, high to low</option>
+                    <option value="new"      {% if sort == 'new' %}selected{% endif %}>Date, new to old</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="drawer-backdrop" id="drawer-backdrop"></div>
+        <aside class="drawer" id="filter-drawer">
+            <div class="drawer-head"><h3>Filter</h3><button type="button" class="icon-btn" id="close-filter" aria-label="Close">&times;</button></div>
+            <div class="drawer-body">
+                <input type="hidden" name="search" value="{{ search }}">
+
+                <h4>Category</h4>
+                <label class="check"><input type="radio" name="category" value="" {% if not category_id %}checked{% endif %}> All categories</label>
+                {% for c in categories %}
+                    <label class="check"><input type="radio" name="category" value="{{ c.category_id }}" {% if category_id == c.category_id %}checked{% endif %}> {{ c.category_name }} ({{ c.product_count }})</label>
+                {% endfor %}
+
+                <h4>Availability</h4>
+                <label class="check"><input type="checkbox" name="in_stock" value="1" {% if in_stock %}checked{% endif %}> In stock only</label>
+
+                <h4>Customer rating</h4>
+                <label class="check"><input type="radio" name="rating" value="" {% if not min_rating %}checked{% endif %}> Any rating</label>
+                {% for r in [4, 3, 2] %}
+                <label class="check"><input type="radio" name="rating" value="{{ r }}" {% if min_rating == r %}checked{% endif %}> {{ r }} stars &amp; up</label>
+                {% endfor %}
+
+                <h4>Price (&#8377;)</h4>
+                <div class="price-row">
+                    <input type="number" name="min_price" min="0" step="1" placeholder="{{ price_range.lo|int }}" value="{{ min_price }}">
+                    <span>&mdash;</span>
+                    <input type="number" name="max_price" min="0" step="1" placeholder="{{ price_range.hi|int }}" value="{{ max_price }}">
+                </div>
+            </div>
+            <div class="drawer-foot">
+                <a class="btn btn-light" href="{{ url_for('shop') }}">Remove all</a>
+                <button class="btn" type="submit">Apply</button>
+            </div>
+        </aside>
+    </form>
+
+    {% if products %}
+    <div class="product-grid">
+        {% for p in products %}{{ product_card(p, back, wish_ids) }}{% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>No products match your search.</p>
+        <a class="btn" href="{{ url_for('shop') }}">Clear filters</a>
+    </div>
+    {% endif %}
+
+    {% if recent %}
+    <section class="related">
+        <h2>Recently viewed</h2>
+        <div class="product-grid">
+            {% for p in recent %}{{ product_card(p, back, wish_ids) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

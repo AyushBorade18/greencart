@@ -1,0 +1,122 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import status_pill %}
+{% block title %}Order #{{ order.order_id }} - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb"><a href="{{ url_for('orders') }}">My orders</a> <span>/</span> Order #{{ order.order_id }}</nav>
+    <h1 class="page-title">Order #{{ order.order_id }} {{ status_pill(order.order_status) }}</h1>
+    <div class="actions-row">
+        <a class="btn btn-small btn-light" href="{{ url_for('order_invoice', order_id=order.order_id) }}" target="_blank" rel="noopener">View invoice</a>
+        {% if order.order_status in ['Confirmed', 'Packed'] %}
+        <form method="POST" action="{{ url_for('order_cancel', order_id=order.order_id) }}" onsubmit="return confirm('Cancel this order?');">
+            <button class="btn btn-small btn-danger" type="submit">Cancel order</button>
+        </form>
+        {% endif %}
+    </div>
+
+    {# ---- live tracking bar ---- #}
+    <div class="box track-box">
+        {% if track.cancelled %}
+            <p><span class="pill pill-red">Cancelled</span>
+                {% if track.cancelled_at %}<span class="muted"> on {{ track.cancelled_at.strftime('%d %b %Y, %I:%M %p') }}</span>{% endif %}</p>
+        {% endif %}
+        <ol class="track">
+            {% for s in track.steps %}
+            <li class="{{ 'done' if s.done else '' }} {{ 'current' if s.current else '' }}">
+                <span class="dot"></span>
+                <strong>{{ s.name }}</strong>
+                <small>{{ s.time.strftime('%d %b, %I:%M %p') if s.time else '' }}</small>
+            </li>
+            {% endfor %}
+        </ol>
+        {% if order.order_status == 'Shipped' %}
+        <p class="muted">Tracking number <strong>{{ order.tracking_number or '-' }}</strong>
+            {% if order.expected_delivery %} &middot; expected by <strong>{{ order.expected_delivery.strftime('%a, %d %b') }}</strong>{% endif %}</p>
+        {% elif order.order_status in ['Confirmed', 'Packed'] %}
+        <p class="muted">We will email you when your order ships.</p>
+        {% endif %}
+    </div>
+
+    <div class="order-grid">
+        <div class="box">
+            <h3>Order details</h3>
+            <dl>
+                <dt>Placed on</dt><dd>{{ order.order_date.strftime('%d %b %Y, %I:%M %p') }}</dd>
+                <dt>Delivery address</dt><dd>{{ order.shipping_address }}</dd>
+                <dt>Payment</dt><dd>{{ order.payment_method }} &middot; {{ order.payment_status }}</dd>
+                <dt>Tracking number</dt><dd>{{ order.tracking_number or 'Not shipped yet' }}</dd>
+                <dt>Expected delivery</dt><dd>{{ order.expected_delivery.strftime('%d %b %Y') if order.expected_delivery else '-' }}</dd>
+                <dt>Delivered on</dt><dd>{{ order.delivered_date.strftime('%d %b %Y') if order.delivered_date else '-' }}</dd>
+            </dl>
+        </div>
+        <div class="box">
+            <h3>History</h3>
+            <ul class="timeline">
+                {% for h in history %}
+                <li><strong>{{ h.new_status }}</strong><span class="muted">{{ h.changed_at.strftime('%d %b %Y, %I:%M %p') }}</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <h2 class="section-title">Items</h2>
+    <div class="items-table">
+        {% for i in items %}
+        {% set left = i.quantity - returned.get(i.product_id, 0) %}
+        <div class="items-row">
+            <a href="{{ url_for('product_page', product_id=i.product_id) }}">{{ i.product_name }}</a>
+            <span>&#8377;{{ '{:,.2f}'.format(i.unit_price) }} &times; {{ i.quantity }}</span>
+            <strong>&#8377;{{ '{:,.2f}'.format(i.subtotal) }}</strong>
+            <span>
+                {% if order.order_status == 'Delivered' and i.product_id not in reviewed %}
+                    <a class="link-btn" href="{{ url_for('product_page', product_id=i.product_id) }}#reviews">Write a review</a>
+                {% elif order.order_status == 'Delivered' %}<span class="muted">Reviewed</span>{% endif %}
+            </span>
+        </div>
+        {% if can_return and left > 0 %}
+        <details class="accordion return-form">
+            <summary>Return this item</summary>
+            <form method="POST" action="{{ url_for('return_request', order_id=order.order_id) }}" class="grid-form">
+                <input type="hidden" name="product_id" value="{{ i.product_id }}">
+                <label>How many?
+                    <select name="quantity">{% for n in range(1, left + 1) %}<option value="{{ n }}">{{ n }}</option>{% endfor %}</select>
+                </label>
+                <label>Reason
+                    <select name="reason" required>
+                        <option value="">Choose a reason</option>
+                        {% for r in reasons %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                    </select>
+                </label>
+                <label class="full">Details (optional)<textarea name="details" rows="2" maxlength="500"></textarea></label>
+                <button class="btn full" type="submit">Request return</button>
+            </form>
+        </details>
+        {% endif %}
+        {% endfor %}
+
+        <div class="items-row"><span>Items subtotal</span><span></span><strong>&#8377;{{ '{:,.2f}'.format(extra.subtotal) }}</strong><span></span></div>
+        {% if extra.discount_amount > 0 %}
+        <div class="items-row"><span>Coupon {{ extra.coupon_code or '' }}</span><span></span><strong>&minus; &#8377;{{ '{:,.2f}'.format(extra.discount_amount) }}</strong><span></span></div>
+        {% endif %}
+        <div class="items-row"><span>Delivery</span><span></span><strong>{% if extra.delivery_fee > 0 %}&#8377;{{ '{:,.2f}'.format(extra.delivery_fee) }}{% else %}Free{% endif %}</strong><span></span></div>
+        <div class="items-row items-total"><span>Total</span><span></span><strong>&#8377;{{ '{:,.2f}'.format(order.total_amount) }}</strong><span></span></div>
+    </div>
+
+    {% if order.order_status == 'Delivered' %}
+        {% if can_return %}<p class="muted small">You can return items until <strong>{{ return_until.strftime('%d %b %Y') }}</strong> ({{ window }}-day returns).</p>
+        {% else %}<p class="muted small">The {{ window }}-day return period for this order has ended.</p>{% endif %}
+    {% endif %}
+
+    {% if my_returns %}
+    <h2 class="section-title">Returns for this order</h2>
+    {% for r in my_returns %}
+    <div class="box return-card">
+        <div class="return-top"><strong>{{ r.product_name }} &times; {{ r.quantity }}</strong>
+            <span class="pill {{ 'pill-dark' if r.status == 'Refunded' else ('pill-red' if r.status == 'Rejected' else 'pill-accent') }}">{{ r.status }}</span></div>
+        <p class="muted small">{{ r.reason }} &middot; refund &#8377;{{ '{:,.2f}'.format(r.refund_amount) }}</p>
+        {% if r.admin_note %}<p class="muted small">Note from the store: {{ r.admin_note }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

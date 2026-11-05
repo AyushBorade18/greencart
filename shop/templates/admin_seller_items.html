@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Seller items - GreenCart Admin{% endblock %}
+{% block content %}
+<h2 class="page-title">Seller items</h2>
+<div class="filters">
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_sellers') }}">Sellers</a>
+    <a class="btn btn-small" href="{{ url_for('admin_seller_items') }}">Seller items</a>
+    <a class="btn btn-small btn-outline" href="{{ url_for('admin_purchase_orders') }}">Restock orders</a>
+</div>
+
+<form class="inline-form" method="GET" style="margin-bottom:14px;">
+    <select name="seller">
+        <option value="">All sellers</option>
+        {% for s in sellers %}<option value="{{ s.seller_id }}" {% if seller_id == s.seller_id %}selected{% endif %}>{{ s.business_name }}</option>{% endfor %}
+    </select>
+    <select name="link">
+        <option value="">All items</option>
+        <option value="store" {% if link == 'store' %}selected{% endif %}>Items we already sell</option>
+        <option value="new" {% if link == 'new' %}selected{% endif %}>New items (not in the store)</option>
+    </select>
+    <button class="btn btn-small" type="submit">Filter</button>
+</form>
+
+<table>
+    <tr><th>Picture</th><th>Item</th><th>Seller</th><th>Wholesale price</th><th>Available</th><th>Min order</th><th>Store product</th><th>Visible</th><th></th></tr>
+    {% for i in items %}
+    <tr>
+        <td>{% if i.image_url %}<img src="{{ i.image_url }}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:6px;">{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td><strong>{{ i.item_name }}</strong><br><span class="muted small">{{ i.category_name }}</span></td>
+        <td>{{ i.business_name }}{% if i.seller_status != 'Approved' %}<br><span class="badge badge-orange">{{ i.seller_status }}</span>{% endif %}</td>
+        <td>&#8377; {{ i.unit_price }}</td>
+        <td>{{ i.quantity_available }}</td>
+        <td>{{ i.min_order_qty }}</td>
+        <td>{% if i.product_id %}{{ i.store_product }}{% else %}<span class="badge badge-grey">New item</span>{% endif %}</td>
+        <td>{% if i.is_active %}<span class="badge badge-green">Yes</span>{% else %}<span class="badge badge-grey">Hidden</span>{% endif %}</td>
+        <td>
+            {% if not i.product_id %}
+            <form class="inline-form" method="POST" action="{{ url_for('admin_add_to_store', listing_id=i.listing_id) }}">
+                <input class="qty-input" style="width:100px;" type="number" name="retail_price" step="0.01" min="0.01" placeholder="Selling price" required>
+                <input class="qty-input" style="width:100px;" type="number" name="order_qty" min="1" max="{{ i.quantity_available }}" placeholder="Order qty">
+                <button class="btn btn-small" type="submit">Add to store</button>
+            </form>
+            {% else %}
+                <a class="btn btn-small btn-outline" href="{{ url_for('admin_restock_page', product_id=i.product_id) }}">Restock page</a>
+            {% endif %}
+        </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="9" class="empty">No seller items yet.</td></tr>
+    {% endfor %}
+</table>
+{% endblock %}

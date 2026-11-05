@@ -1,0 +1,74 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import product_art %}
+{% block title %}{{ 'List a new item' if is_new else 'Edit listing' }} - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb"><a href="{{ url_for('seller_products') }}">My products</a> <span>/</span> {{ 'New item' if is_new else 'Edit' }}</nav>
+    <h1 class="page-title">{{ 'List a new item' if is_new else 'Edit listing' }}</h1>
+
+    {% if g.seller.status != 'Approved' %}
+        <p class="notice warn">Your account is not approved yet, so you cannot save listings.</p>
+    {% endif %}
+
+    <form class="form-box" method="POST" enctype="multipart/form-data">
+        <div class="grid-form">
+            <label class="full">Item name
+                <input type="text" name="item_name" maxlength="100" value="{{ item.get('item_name') or '' }}" required>
+            </label>
+
+            <label>Which store product is this? (optional)
+                <select name="product_id">
+                    <option value="">Not in the store yet (new item)</option>
+                    {% for p in products %}
+                        <option value="{{ p.product_id }}" {% if item.get('product_id')|string == p.product_id|string %}selected{% endif %}>{{ p.product_name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label>Category
+                <select name="category_id">
+                    <option value="">{% if categories %}Choose a category{% else %}No categories yet - type one below{% endif %}</option>
+                    {% for c in categories %}
+                        <option value="{{ c.category_id }}" {% if item.get('category_id')|string == c.category_id|string %}selected{% endif %}>{{ c.category_name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <p class="muted small full">If you pick a store product, your listing can fill that product's restock orders. A new item can be added to the store by the admin.</p>
+
+            <label class="full">Or add a new category
+                <input type="text" name="new_category" maxlength="50" placeholder="e.g. Footwear (only if none of the categories above fits)" value="{{ item.get('new_category') or '' }}">
+            </label>
+
+            <label class="full">Description
+                <textarea name="description" rows="3" maxlength="500">{{ item.get('description') or '' }}</textarea>
+            </label>
+
+            <label>Wholesale price per item (&#8377;)
+                <input type="number" name="unit_price" step="0.01" min="0.01" value="{{ item.get('unit_price') or '' }}" required>
+            </label>
+            <label>Quantity you have available
+                <input type="number" name="quantity_available" min="0" value="{{ item.get('quantity_available', 0) }}" required>
+            </label>
+            <label>Minimum order quantity
+                <input type="number" name="min_order_qty" min="1" value="{{ item.get('min_order_qty', 1) }}" required>
+            </label>
+            {% if not is_new %}
+            <label class="check-line">
+                <input type="checkbox" name="is_active" {% if item.get('is_active') %}checked{% endif %}> Visible to the store
+            </label>
+            {% endif %}
+
+            <label class="full">Product picture (PNG, JPG or WEBP, up to 2 MB)
+                <input type="file" name="image" accept="image/png,image/jpeg,image/webp">
+            </label>
+            {% if item.get('image_url') %}
+            <div class="full current-pic">
+                <div class="mini big">{{ product_art({'category_name': 'x', 'image_url': item.get('image_url'), 'product_name': item.get('item_name')}) }}</div>
+                <label class="check-line"><input type="checkbox" name="remove_image"> Remove the current picture</label>
+            </div>
+            {% endif %}
+
+            <button class="btn btn-wide full" type="submit">{{ 'List item' if is_new else 'Save changes' }}</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

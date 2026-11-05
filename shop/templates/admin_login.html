@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Admin Login - GreenCart{% endblock %}
+{% block content %}
+<div class="auth-card">
+    <h2>Admin Login</h2>
+    <form method="POST">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button class="btn" type="submit">Login as Admin</button>
+    </form>
+    <p class="switch">Not an admin? <a href="{{ url_for('login') }}">Customer login</a></p>
+</div>
+{% endblock %}

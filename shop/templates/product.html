@@ -1,0 +1,138 @@
+{% extends "store_base.html" %}
+{% from "store_macros.html" import product_art, stars, product_card %}
+{% block title %}{{ p.product_name }} - GreenCart{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="{{ url_for('home') }}">Home</a> <span>/</span>
+        <a href="{{ url_for('shop', category=p.category_id) }}">{{ p.category_name }}</a> <span>/</span> {{ p.product_name }}
+    </nav>
+
+    <div class="product-layout">
+        <div class="product-gallery">
+            {% if images %}
+            <div class="art gallery-main"><img id="gallery-main" src="{{ images[0].image_url }}" alt="{{ p.product_name }}"></div>
+            {% if images|length > 1 %}
+            <div class="gallery-thumbs">
+                {% for im in images %}
+                <button type="button" class="{{ 'on' if loop.first else '' }}" data-src="{{ im.image_url }}" aria-label="Picture {{ loop.index }}"><img src="{{ im.image_url }}" alt="" loading="lazy"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% else %}{{ product_art(p) }}{% endif %}
+        </div>
+
+        <div class="product-details">
+            <span class="card-cat">{{ p.category_name }}</span>
+            <h1>{{ p.product_name }}</h1>
+            <div class="rating-line">
+                {% if p.review_count %}{{ stars(p.avg_rating) }} <a href="#reviews">{{ p.avg_rating }} &middot; {{ p.review_count }} review{{ '' if p.review_count == 1 else 's' }}</a>
+                {% else %}<a href="#reviews" class="muted">No reviews yet</a>{% endif %}
+            </div>
+            <div class="price big">&#8377;{{ '{:,.2f}'.format(p.price) }}</div>
+            <p class="muted">Inclusive of all taxes. {% if free_above %}Free delivery on orders above &#8377;{{ free_above }}.{% else %}Delivery charges may apply.{% endif %}</p>
+            <p class="muted small">Estimated delivery by <strong>{{ eta.strftime('%a, %d %b') }}</strong> &middot; {{ window }}-day easy returns</p>
+
+            <p class="stock-line">
+                {% if p.quantity_available == 0 %}<span class="dot dot-out"></span> Sold out
+                {% elif p.stock_status == 'Low Stock' %}<span class="dot dot-low"></span> Only {{ p.quantity_available }} left in stock
+                {% else %}<span class="dot dot-in"></span> {{ p.quantity_available }} in stock{% endif %}
+                {% if in_cart %}<span class="muted"> &nbsp;&middot;&nbsp; {{ in_cart }} already in your cart</span>{% endif %}
+            </p>
+
+            {% if p.quantity_available > 0 %}
+            <form class="buy-form" method="POST" action="{{ url_for('cart_add') }}">
+                <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                <input type="hidden" name="next" value="{{ url_for('product_page', product_id=p.product_id) }}">
+                <div class="stepper">
+                    <button type="button" data-step="-1" aria-label="Less">&minus;</button>
+                    <input type="number" name="quantity" value="1" min="1" max="{{ p.quantity_available }}">
+                    <button type="button" data-step="1" aria-label="More">+</button>
+                </div>
+                <button class="btn btn-wide" type="submit">Add to cart</button>
+                <button class="btn btn-light btn-wide" type="submit" name="buy_now" value="1">Buy now</button>
+            </form>
+            {% else %}
+                <button class="btn btn-wide" disabled>Sold out</button>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('wishlist_toggle') }}" class="wish-line">
+                <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                <input type="hidden" name="next" value="{{ url_for('product_page', product_id=p.product_id) }}">
+                <button class="link-btn" type="submit">{% if p.product_id in wish_ids %}&#9829; Saved to wishlist (remove){% else %}&#9825; Save to wishlist{% endif %}</button>
+            </form>
+
+            <details class="accordion" open>
+                <summary>Description</summary>
+                <p>{{ p.description or 'No description available.' }}</p>
+            </details>
+            <details class="accordion">
+                <summary>Delivery &amp; returns</summary>
+                <p>{% if free_above %}Delivery is free on orders above &#8377;{{ free_above }}.{% endif %} You can cancel an order any time before it is shipped. Delivered items can be returned within {{ window }} days from your order page; once approved, the refund is processed and the item goes back into stock.</p>
+            </details>
+            <details class="accordion">
+                <summary>Payment options</summary>
+                <p>UPI, credit card, debit card, net banking and cash on delivery.</p>
+            </details>
+        </div>
+    </div>
+
+    <section class="reviews" id="reviews">
+        <h2>Customer reviews</h2>
+
+        {% if can_review %}
+        <div class="review-form">
+            <h4>Write a review</h4>
+            <form method="POST" action="{{ url_for('review') }}">
+                <input type="hidden" name="product_id" value="{{ p.product_id }}">
+                <label>Rating
+                    <select name="rating" required>
+                        <option value="5">5 - Excellent</option>
+                        <option value="4">4 - Good</option>
+                        <option value="3">3 - Average</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="1">1 - Terrible</option>
+                    </select>
+                </label>
+                <label>Your comment
+                    <textarea name="comment" rows="3" maxlength="500"></textarea>
+                </label>
+                <button class="btn" type="submit">Submit review</button>
+            </form>
+        </div>
+        {% elif reviewed %}
+            <p class="muted">You have already reviewed this product. Thank you!</p>
+        {% else %}
+            <p class="muted">You can review this product after it has been delivered to you.</p>
+        {% endif %}
+
+        {% for r in reviews %}
+        <div class="review">
+            <div class="review-head"><strong>{{ r.customer_name }}</strong> {{ stars(r.rating) }}
+                <span class="muted">{{ r.review_date.strftime('%d %b %Y') }}</span></div>
+            <p>{{ r.comment or '' }}</p>
+        </div>
+        {% else %}
+            <p class="muted">No reviews yet.</p>
+        {% endfor %}
+    </section>
+
+    {% if related %}
+    <section class="related">
+        <h2>You may also like</h2>
+        <div class="product-grid">
+            {% for r in related %}{{ product_card(r, url_for('product_page', product_id=p.product_id), wish_ids) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if recent %}
+    <section class="related">
+        <h2>Recently viewed</h2>
+        <div class="product-grid">
+            {% for r in recent %}{{ product_card(r, url_for('product_page', product_id=p.product_id), wish_ids) }}{% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

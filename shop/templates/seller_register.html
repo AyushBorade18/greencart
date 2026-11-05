@@ -1,0 +1,27 @@
+{% extends "seller_base.html" %}
+{% block title %}Register as a seller - GreenCart{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-box wide">
+        <h1>Register as a seller</h1>
+        {% if auth_mode == 'supabase' %}
+            <p class="muted">Use a real business email: we send a confirmation link before you can log in. The store admin then approves your account.</p>
+        {% else %}
+            <p class="muted">The store admin approves new sellers before they can list items.</p>
+        {% endif %}
+        <form method="POST" class="grid-form">
+            <label>Business name<input type="text" name="business_name" value="{{ form.get('business_name', '') }}" required></label>
+            <label>Contact person<input type="text" name="contact_name" value="{{ form.get('contact_name', '') }}" required></label>
+            <label>Email<input type="email" name="email" value="{{ form.get('email', '') }}" required></label>
+            <label>Password (at least 6 characters)<input type="password" name="password" required></label>
+            <label>Phone (10 digits)<input type="text" name="phone" maxlength="10" value="{{ form.get('phone', '') }}" required></label>
+            <label>GST number (optional)<input type="text" name="gst_number" maxlength="20" value="{{ form.get('gst_number', '') }}"></label>
+            <label class="full">Business address<input type="text" name="address" value="{{ form.get('address', '') }}" required></label>
+            <label>City<input type="text" name="city" value="{{ form.get('city', '') }}" required></label>
+            <label>Pincode (6 digits)<input type="text" name="pincode" maxlength="6" value="{{ form.get('pincode', '') }}" required></label>
+            <button class="btn btn-wide full" type="submit">Register</button>
+        </form>
+        <p class="auth-switch">Already registered? <a href="{{ url_for('seller_login') }}">Seller login</a></p>
+    </div>
+</div>
+{% endblock %}

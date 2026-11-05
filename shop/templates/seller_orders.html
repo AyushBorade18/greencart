@@ -1,0 +1,36 @@
+{% extends "seller_base.html" %}
+{% from "store_macros.html" import po_pill %}
+{% block title %}Orders - Seller portal{% endblock %}
+{% block content %}
+<div class="container">
+    <h1 class="page-title">My orders</h1>
+    {% if orders %}
+    <table class="data-table">
+        <tr><th>Order</th><th>Product</th><th>Quantity</th><th>Price each</th><th>Total</th><th>Status</th><th>Date</th><th></th></tr>
+        {% for o in orders %}
+        <tr>
+            <td><a href="{{ url_for('seller_order_detail', po_id=o.po_id) }}">#{{ o.po_id }}</a></td>
+            <td>{{ o.product_name }}</td>
+            <td>{{ o.quantity_offered or o.quantity_requested }}</td>
+            <td>&#8377;{{ '{:,.2f}'.format(o.unit_price) if o.unit_price else '-' }}</td>
+            <td>&#8377;{{ '{:,.2f}'.format(o.total_cost) if o.total_cost else '-' }}</td>
+            <td>{{ po_pill(o.status) }}</td>
+            <td>{{ o.created_at.strftime('%d %b %Y') }}</td>
+            <td>
+                {% if o.status == 'Accepted' %}
+                <form method="POST" action="{{ url_for('seller_order_action', po_id=o.po_id) }}">
+                    <input type="hidden" name="action" value="ship">
+                    <button class="btn btn-small" type="submit">Mark as shipped</button>
+                </form>
+                {% elif o.status == 'Requested' %}
+                    <a class="link-btn" href="{{ url_for('seller_requests') }}">Answer</a>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <div class="empty"><p>No orders yet. When the store orders from you or accepts your offer, it appears here.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

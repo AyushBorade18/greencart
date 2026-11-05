@@ -1,0 +1,7 @@
+<nav class="account-nav" aria-label="My account">
+    <a href="{{ url_for('account') }}" class="{{ 'on' if active == 'account' }}">Profile</a>
+    <a href="{{ url_for('orders') }}" class="{{ 'on' if active == 'orders' }}">Orders</a>
+    <a href="{{ url_for('addresses') }}" class="{{ 'on' if active == 'addresses' }}">Addresses</a>
+    <a href="{{ url_for('wishlist') }}" class="{{ 'on' if active == 'wishlist' }}">Wishlist</a>
+    <a href="{{ url_for('returns') }}" class="{{ 'on' if active == 'returns' }}">Returns</a>
+</nav>

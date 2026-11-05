@@ -1,0 +1,19 @@
+{% extends "store_base.html" %}
+{% block title %}Check your email - GreenCart{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-box" style="text-align:center;">
+        <h1>Check your email</h1>
+        <p class="muted">We sent a confirmation link to</p>
+        <p><strong>{{ email }}</strong></p>
+        <p class="muted">Click the link in that email to confirm your address, then come back and log in.
+            It can take a minute to arrive. Check your spam folder too.</p>
+        <form method="POST" action="{{ url_for('auth_resend') }}">
+            <input type="hidden" name="email" value="{{ email }}">
+            <input type="hidden" name="role" value="{{ role }}">
+            <button class="btn btn-light btn-wide" type="submit">Send the email again</button>
+        </form>
+        <p class="auth-switch"><a href="{{ url_for('login' if role == 'customer' else 'seller_login') }}">Go to log in</a></p>
+    </div>
+</div>
+{% endblock %}

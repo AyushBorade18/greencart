@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "macros.html" import status_badge %}
+{% block title %}Order #{{ order.order_id }} - GreenCart{% endblock %}
+{% block content %}
+<p>
+    {% if admin %}<a href="{{ url_for('admin_orders') }}">&larr; Back to all orders</a>
+    {% else %}<a href="{{ url_for('orders') }}">&larr; Back to my orders</a>{% endif %}
+</p>
+
+<h2 class="page-title">Order #{{ order.order_id }} {{ status_badge(order.order_status) }}</h2>
+
+<div class="two-col">
+    <div class="panel">
+        <h4>Order information</h4>
+        <p><strong>Customer:</strong> {{ order.customer_name }}</p>
+        <p><strong>Placed on:</strong> {{ order.order_date.strftime('%d %b %Y, %I:%M %p') }}</p>
+        <p><strong>Delivery address:</strong> {{ order.shipping_address }}</p>
+        <p><strong>Payment:</strong> {{ order.payment_method }} &middot; {{ order.payment_status }}</p>
+        <p><strong>Tracking number:</strong> {{ order.tracking_number or 'Not shipped yet' }}</p>
+        <p><strong>Expected delivery:</strong>
+            {{ order.expected_delivery.strftime('%d %b %Y') if order.expected_delivery else '-' }}</p>
+        <p><strong>Delivered on:</strong>
+            {{ order.delivered_date.strftime('%d %b %Y') if order.delivered_date else '-' }}</p>
+        {% if admin %}<p><a class="btn btn-small" href="{{ url_for('admin_order_invoice', order_id=order.order_id) }}" target="_blank" rel="noopener">Open invoice</a></p>{% endif %}
+    </div>
+
+    <div class="panel">
+        <h4>Order progress</h4>
+        <ul class="timeline">
+            {% for h in history %}
+            <li><strong>{{ h.new_status }}</strong>
+                <span class="muted">{{ h.changed_at.strftime('%d %b %Y, %I:%M %p') }}</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<h3 class="section-title">Items</h3>
+<table>
+    <tr><th>Product</th><th>Price</th><th>Quantity</th><th>Subtotal</th>{% if not admin %}<th></th>{% endif %}</tr>
+    {% for i in items %}
+    <tr>
+        <td>{{ i.product_name }}</td>
+        <td>&#8377; {{ i.unit_price }}</td>
+        <td>{{ i.quantity }}</td>
+        <td>&#8377; {{ i.subtotal }}</td>
+        {% if not admin %}
+        <td>
+            {% if order.order_status == 'Delivered' and i.product_id not in reviewed %}
+                <a href="{{ url_for('product_page', product_id=i.product_id) }}">Write a review</a>
+            {% elif order.order_status == 'Delivered' %}<span class="muted">Reviewed</span>{% endif %}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+    {% if extra %}
+    <tr><td colspan="3" style="text-align:right;">Items subtotal</td><td {% if not admin %}colspan="2"{% endif %}>&#8377; {{ extra.subtotal }}</td></tr>
+    {% if extra.discount_amount > 0 %}<tr><td colspan="3" style="text-align:right;">Coupon {{ extra.coupon_code or '' }}</td><td {% if not admin %}colspan="2"{% endif %}>&minus; &#8377; {{ extra.discount_amount }}</td></tr>{% endif %}
+    <tr><td colspan="3" style="text-align:right;">Delivery</td><td {% if not admin %}colspan="2"{% endif %}>{{ '&#8377; %s'|format(extra.delivery_fee)|safe if extra.delivery_fee > 0 else 'Free' }}</td></tr>
+    {% endif %}
+    <tr class="total-row"><td colspan="3" style="text-align:right;"><strong>Total</strong></td>
+        <td {% if not admin %}colspan="2"{% endif %}><strong>&#8377; {{ order.total_amount }}</strong></td></tr>
+</table>
+
+{% if admin and next_options %}
+<div class="panel">
+    <h4>Change order status</h4>
+    <form class="inline-form" method="POST" action="{{ url_for('admin_update_status', order_id=order.order_id) }}">
+        <input type="hidden" name="next" value="{{ url_for('admin_order_detail', order_id=order.order_id) }}">
+        <select name="new_status">
+            {% for s in next_options %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+        {% if 'Shipped' in next_options %}
+        <input type="text" name="courier_name" maxlength="50" placeholder="Courier (when shipping)">
+        <input type="text" name="tracking_number" maxlength="30" placeholder="Tracking no. (optional)">
+        {% endif %}
+        <button class="btn" type="submit">Update Status</button>
+    </form>
+</div>
+{% endif %}
+
+{% if admin and returns %}
+<h3 class="section-title">Returns for this order</h3>
+<table>
+    <tr><th>#</th><th>Item</th><th>Reason</th><th>Refund</th><th>Status</th></tr>
+    {% for r in returns %}
+    <tr><td>{{ r.return_id }}</td><td>{{ r.product_name }} &times; {{ r.quantity }}</td><td>{{ r.reason }}</td>
+        <td>&#8377; {{ r.refund_amount }}</td><td>{{ r.status }}</td></tr>
+    {% endfor %}
+</table>
+<p><a href="{{ url_for('admin_returns') }}">Manage returns &rarr;</a></p>
+{% endif %}
+
+{% if not admin and order.order_status in ['Confirmed', 'Packed'] %}
+<form method="POST" action="{{ url_for('order_cancel', order_id=order.order_id) }}"
+      onsubmit="return confirm('Cancel this order?');" style="margin-top:20px;">
+    <button class="btn btn-red" type="submit">Cancel Order</button>
+</form>
+{% endif %}
+{% endblock %}
